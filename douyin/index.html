@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#000">
+<title>滴音 · 表情包刷刷乐</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+#feed{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none}
+#feed::-webkit-scrollbar{display:none}
+.item{height:100%;width:100%;scroll-snap-align:start;scroll-snap-stop:always;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.bg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(30px) brightness(.45);transform:scale(1.2)}
+.item.p .bg{background:radial-gradient(circle at 50% 40%,#ff9ec7,#7b3fe4 70%,#2b0b4d);filter:none;transform:none;inset:0}
+.media{position:relative;max-width:92%;max-height:70%;width:auto;border-radius:14px;z-index:1}
+video.media{width:92%}
+.side{position:absolute;right:10px;bottom:120px;z-index:3;display:flex;flex-direction:column;gap:20px;align-items:center}
+.btn{display:flex;flex-direction:column;align-items:center;font-size:12px;cursor:pointer;user-select:none;text-shadow:0 1px 3px #000}
+.btn b{font-size:34px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));transition:transform .15s}
+.btn:active b{transform:scale(.8)}
+.btn.on b{animation:pop .35s}
+.avatar{width:48px;height:48px;border-radius:50%;border:2px solid #fff;background:#fe2c55;display:flex;align-items:center;justify-content:center;font-size:24px}
+.cap{position:absolute;left:14px;right:80px;bottom:70px;z-index:3;text-shadow:0 1px 4px #000}
+.cap h3{font-size:17px;margin-bottom:6px}
+.cap p{font-size:14px;line-height:1.4;opacity:.95}
+.top{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:center;gap:26px;padding:14px 0 30px;background:linear-gradient(#000a,#0000);font-size:17px}
+.top span{opacity:.6;cursor:pointer;padding-bottom:4px}
+.top span.act{opacity:1;font-weight:700;border-bottom:3px solid #fff}
+.bar{position:fixed;bottom:0;left:0;right:0;z-index:5;height:54px;background:#000;display:flex;justify-content:space-around;align-items:center;font-size:15px;border-top:1px solid #222}
+.bar span{opacity:.7;cursor:pointer}.bar span.act{opacity:1;font-weight:700}
+.plus{width:46px;height:30px;border-radius:9px;background:#fff;color:#000;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:-3px 0 0 #25f4ee,3px 0 0 #fe2c55;cursor:pointer}
+.heart{position:absolute;z-index:4;font-size:90px;pointer-events:none;animation:fly .9s forwards}
+@keyframes fly{0%{transform:translate(-50%,-50%) scale(.4) rotate(-15deg);opacity:0}20%{transform:translate(-50%,-50%) scale(1.2) rotate(-15deg);opacity:1}100%{transform:translate(-50%,-160%) scale(1.6) rotate(-15deg);opacity:0}}
+@keyframes pop{50%{transform:scale(1.4)}}
+.sheet{position:fixed;left:0;right:0;bottom:0;height:62%;background:#161616;border-radius:16px 16px 0 0;z-index:10;transform:translateY(100%);transition:transform .25s;display:flex;flex-direction:column}
+.sheet.open{transform:none}
+.sheet h4{text-align:center;padding:14px;font-size:14px;border-bottom:1px solid #2a2a2a;position:relative}
+.sheet h4 i{position:absolute;right:16px;font-style:normal;cursor:pointer;opacity:.7}
+.clist{flex:1;overflow-y:auto;padding:10px 16px}
+.c{display:flex;gap:10px;margin:12px 0;font-size:14px}.c .a{width:32px;height:32px;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.c small{color:#888;display:block;margin-bottom:2px}
+.cin{display:flex;gap:8px;padding:10px;border-top:1px solid #2a2a2a}
+.cin input{flex:1;background:#2a2a2a;border:0;border-radius:20px;padding:10px 14px;color:#fff;font-size:15px;outline:none}
+.cin button{background:#fe2c55;border:0;color:#fff;border-radius:20px;padding:0 16px;font-size:15px}
+.mask{position:fixed;inset:0;z-index:9;background:#0006;display:none}.mask.open{display:block}
+.toast{position:fixed;top:45%;left:50%;transform:translate(-50%,-50%);background:#000c;padding:10px 18px;border-radius:8px;z-index:20;font-size:14px;display:none}
+.empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:.8;text-align:center;padding:30px}
+.del{position:absolute;top:70px;right:14px;z-index:4;background:#0008;border-radius:14px;padding:4px 10px;font-size:13px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="top"><span data-t="mine">我的上传</span><span data-t="rec" class="act">推荐</span></div>
+<div id="feed"></div>
+<div class="bar"><span class="act" id="bHome">首页</span><span id="bRand">随机</span><div class="plus" id="bPlus">+</div><span id="bLike">喜欢</span><span id="bAbout">说明</span></div>
+<input type="file" id="file" accept="image/*,video/*" multiple hidden>
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet"><h4><span id="ctitle">评论</span><i id="cclose">✕</i></h4><div class="clist" id="clist"></div><div class="cin"><input id="cinput" placeholder="说点什么…" maxlength="100"><button id="csend">发送</button></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const BUILTIN=[
+{id:'g1',src:'media/g1.gif',u:'跳舞鳄鱼',a:'🐊',t:'头往右，起！全场欢呼 #rela no jacaré #鳄鱼跳舞'},
+{id:'g2',src:'media/g2.gif',u:'跳舞鳄鱼',a:'🐊',t:'站起来就是我的主场 #鳄鱼'},
+{id:'g3',src:'media/g3.gif',u:'跳舞鳄鱼',a:'🐊',t:'短版循环，发群里专用'},
+{id:'g4',src:'media/g4.gif',u:'鳄鱼二人组',a:'🐊',t:'高尔夫球场双人舞 #搭子'},
+{id:'g5',src:'media/g5.gif',u:'鳄鱼天团',a:'🐊',t:'三只鳄鱼出道，中间那只最抽'},
+{id:'g6',src:'media/g6.gif',u:'鳄鱼天团',a:'🐊',t:'排练现场 #鳄鱼男团'}
+];
+const PT=['今天也是什么都不想干的一天','我的脑子在度假','听我说谢谢你','这个世界需要我','冲啊！','不想上班','我好可爱','累了，毁灭吧','嘿嘿嘿','派大星的日常','发呆中，勿扰','你说啥？','开心到转圈圈','睡了睡了','好饿','我是天才','emo中','惊！','比心','快夸我','放空','跳舞时间','溜了溜了','晚安','明天再说'];
+for(let i=1;i<=25;i++){const n=String(i).padStart(2,'0');BUILTIN.push({id:'p'+n,src:'media/p'+n+'.gif',u:'派大星',a:'⭐',t:PT[i-1]+' #派大星',p:1})}
+BUILTIN.sort(()=>Math.random()-.5);
+const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
+let likes=LS.get('dy_likes',{}),comments=LS.get('dy_comments',{});
+const BASE={};BUILTIN.forEach(x=>BASE[x.id]=Math.floor(Math.random()*90000)+1000);
+const feed=document.getElementById('feed');let mode='rec',cur=null;
+// IndexedDB for own uploads
+let db;const dbp=new Promise(r=>{const q=indexedDB.open('diyin',1);q.onupgradeneeded=()=>q.result.createObjectStore('v',{keyPath:'id'});q.onsuccess=()=>{db=q.result;r()};q.onerror=()=>r()});
+function mine(){return new Promise(r=>{if(!db)return r([]);const out=[];const c=db.transaction('v').objectStore('v').openCursor(null,'prev');c.onsuccess=e=>{const k=e.target.result;if(k){out.push(k.value);k.continue()}else r(out)}})}
+function fmt(n){return n>=10000?(n/10000).toFixed(1)+'w':n}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',1500)}
+function card(x){
+ const d=document.createElement('div');d.className='item'+(x.p?' p':'');d.dataset.id=x.id;
+ const isV=x.type&&x.type.startsWith('video');
+ d.innerHTML=`<div class="bg" style="${x.p?'':`background-image:url('${x.src}')`}"></div>
+ ${isV?`<video class="media" src="${x.src}" loop playsinline muted></video>`:`<img class="media" src="${x.src}" loading="lazy" alt="">`}
+ <div class="side"><div class="avatar">${x.a||'😎'}</div>
+ <div class="btn lk"><b>${likes[x.id]?'❤️':'🤍'}</b><span>${fmt((BASE[x.id]||0)+(likes[x.id]?1:0))}</span></div>
+ <div class="btn cm"><b>💬</b><span>${(comments[x.id]||[]).length}</span></div>
+ <div class="btn dl"><b>⬇️</b><span>保存</span></div>
+ <div class="btn sh"><b>↗️</b><span>分享</span></div></div>
+ <div class="cap"><h3>@${x.u}</h3><p>${x.t}</p></div>${x.own?'<div class="del">删除</div>':''}`;
+ let last=0;d.addEventListener('click',e=>{if(e.target.closest('.side,.del'))return;const now=Date.now();if(now-last<300){like(x,d,true,e)}else{const v=d.querySelector('video');if(v){setTimeout(()=>{if(Date.now()-last>=300){v.paused?v.play():v.pause()}},310)}}last=now});
+ d.querySelector('.lk').onclick=()=>like(x,d,false);
+ d.querySelector('.cm').onclick=()=>openC(x,d);
+ d.querySelector('.dl').onclick=()=>{const a=document.createElement('a');a.href=x.src;a.download=(x.u||'diyin')+(isV?'.mp4':'.gif');document.body.appendChild(a);a.click();a.remove();toast('开始下载（微信里请长按图片保存）')};
+ d.querySelector('.sh').onclick=async()=>{const url=x.own?location.href:new URL(x.src,location.href).href;try{if(navigator.share){await navigator.share({title:'滴音',url})}else{await navigator.clipboard.writeText(url);toast('链接已复制')}}catch(e){}};
+ if(x.own)d.querySelector('.del').onclick=()=>{if(confirm('删除这条？')){db.transaction('v','readwrite').objectStore('v').delete(x.id);d.remove();toast('已删除')}};
+ return d}
+function like(x,d,dbl,e){
+ if(dbl){const h=document.createElement('div');h.className='heart';h.textContent='❤️';h.style.left=e.clientX+'px';h.style.top=e.clientY+'px';d.appendChild(h);setTimeout(()=>h.remove(),900);if(likes[x.id])return}
+ likes[x.id]=!likes[x.id];if(!likes[x.id])delete likes[x.id];LS.set('dy_likes',likes);
+ const b=d.querySelector('.lk');b.querySelector('b').textContent=likes[x.id]?'❤️':'🤍';b.querySelector('span').textContent=fmt((BASE[x.id]||0)+(likes[x.id]?1:0));b.classList.remove('on');void b.offsetWidth;b.classList.add('on')}
+const sheet=document.getElementById('sheet'),mask=document.getElementById('mask');
+function openC(x,d){cur={x,d};render();sheet.classList.add('open');mask.classList.add('open')}
+function closeC(){sheet.classList.remove('open');mask.classList.remove('open')}
+function render(){const l=comments[cur.x.id]||[];document.getElementById('ctitle').textContent=l.length+' 条评论';document.getElementById('clist').innerHTML=l.length?l.map(c=>`<div class="c"><div class="a">🙂</div><div><small>我 · ${c.t}</small>${c.s.replace(/</g,'&lt;')}</div></div>`).join(''):'<p style="text-align:center;color:#777;margin-top:40px">还没有评论，来抢沙发</p>'}
+document.getElementById('csend').onclick=()=>{const i=document.getElementById('cinput');const s=i.value.trim();if(!s)return;(comments[cur.x.id]=comments[cur.x.id]||[]).push({s,t:new Date().toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})});LS.set('dy_comments',comments);i.value='';render();cur.d.querySelector('.cm span').textContent=comments[cur.x.id].length};
+document.getElementById('cinput').onkeydown=e=>{if(e.key==='Enter')document.getElementById('csend').click()};
+mask.onclick=closeC;document.getElementById('cclose').onclick=closeC;
+const io=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target.querySelector('video');if(v){e.isIntersecting?v.play().catch(()=>{}):v.pause()}}),{threshold:.6});
+async function show(list,emptyMsg){feed.innerHTML='';feed.scrollTop=0;if(!list.length){feed.innerHTML=`<div class="empty">${emptyMsg}</div>`;return}list.forEach(x=>{const c=card(x);feed.appendChild(c);io.observe(c)})}
+async function go(m){mode=m;document.querySelectorAll('.top span').forEach(s=>s.classList.toggle('act',s.dataset.t===m));
+ if(m==='rec')show(BUILTIN);
+ else if(m==='mine'){await dbp;const l=(await mine()).map(v=>({...v,src:URL.createObjectURL(v.blob),u:'我',a:'😎',own:1}));show(l,'<div style="font-size:48px">📱</div>还没有上传<br>点底部 <b>+</b> 选手机里的视频或动图<br><small>只存在你自己的手机浏览器里</small>')}
+ else if(m==='like'){const l=BUILTIN.filter(x=>likes[x.id]);show(l,'<div style="font-size:48px">🤍</div>还没有喜欢的<br>双击画面就能点赞')}}
+document.querySelectorAll('.top span').forEach(s=>s.onclick=()=>go(s.dataset.t));
+const bars=['bHome','bRand','bLike','bAbout'];function act(id){bars.forEach(b=>document.getElementById(b).classList.toggle('act',b===id))}
+document.getElementById('bHome').onclick=()=>{act('bHome');go('rec')};
+document.getElementById('bRand').onclick=()=>{act('bRand');BUILTIN.sort(()=>Math.random()-.5);go('rec');toast('重新洗牌')};
+document.getElementById('bLike').onclick=()=>{act('bLike');go('like')};
+document.getElementById('bAbout').onclick=()=>alert('滴音 · 表情包刷刷乐\n\n上下滑动刷表情包，双击点赞，💬写评论，⬇️保存。\n点 + 可以上传自己的视频/动图，只保存在你这台手机的浏览器里，不会上传到网上。\n\n素材：Tenor 跳舞鳄鱼梗；Sticker Maker 派大星表情包（作者 COW.COW W【C.C】）。仅供个人娱乐。');
+const file=document.getElementById('file');document.getElementById('bPlus').onclick=()=>file.click();
+file.onchange=async()=>{await dbp;if(!db){toast('浏览器不支持本地保存');return}const fs=[...file.files];for(const f of fs){if(f.size>80*1024*1024){toast('文件太大（>80MB）');continue}const t=prompt('给「'+f.name+'」写句文案：','我的作品 #滴音')||'#滴音';await new Promise(r=>{const tx=db.transaction('v','readwrite');tx.objectStore('v').put({id:'u'+Date.now()+Math.random().toString(36).slice(2,6),blob:f,type:f.type,t});tx.oncomplete=r})}file.value='';if(fs.length){toast('发布成功');go('mine')}};
+go('rec');
+</script>
+</body>
+</html>
