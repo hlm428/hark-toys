@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>双女主百合人设生成器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      :root {
+        --x-pink: #f6dde4;
+        --x-lilac: #e6e0f3;
+        --x-cream: #fdf7f1;
+        --x-ink: #6b4a57;
+        --x-line: #efdce3;
+      }
+      body {
+        background: linear-gradient(170deg, var(--x-cream), #f8eef3 55%, #efe9f7);
+      }
+      .x-chipset {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .x-chip {
+        min-height: var(--tap);
+        padding: 6px 14px;
+        border-radius: var(--r-pill);
+        border: 1px solid var(--x-line);
+        background: #fff;
+        color: var(--x-ink);
+        font: var(--type-tag);
+        cursor: pointer;
+      }
+      .x-chip[aria-pressed="true"] {
+        background: var(--x-pink);
+        border-color: #e8c3cf;
+        font-weight: var(--weight-medium);
+      }
+      .x-go {
+        min-height: var(--tap);
+        padding: 10px 26px;
+        border: 0;
+        border-radius: var(--r-pill);
+        background: linear-gradient(120deg, #f3c6d4, #ded3f0);
+        color: var(--x-ink);
+        font: var(--type-label);
+        font-weight: var(--weight-bold);
+        cursor: pointer;
+      }
+      .x-duo {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        transition: opacity var(--dur-quick) var(--ease-out);
+      }
+      #cpBox {
+        transition: opacity var(--dur-quick) var(--ease-out);
+      }
+      .x-duo.is-out,
+      #cpBox.is-out {
+        opacity: 0;
+      }
+      .x-card {
+        padding: 18px 20px;
+        border-radius: var(--r-l);
+        border: 1px solid var(--x-line);
+        background: rgba(255, 255, 255, 0.72);
+        transition: opacity var(--dur-quick) var(--ease-out);
+      }
+      .x-card h3 {
+        font: var(--type-title);
+        color: var(--x-ink);
+      }
+      .x-port {
+        display: grid;
+        place-items: center;
+        margin-bottom: 8px;
+      }
+      .x-dl {
+        margin: 12px 0 0;
+        font: var(--type-small);
+      }
+      .x-dl > div {
+        display: grid;
+        grid-template-columns: 4.6em minmax(0, 1fr);
+        gap: 8px;
+        padding: 7px 0;
+        border-top: 1px solid var(--x-line);
+      }
+      .x-dl dt {
+        color: var(--text-secondary);
+      }
+      .x-dl dd {
+        margin: 0;
+        color: var(--text-primary);
+      }
+      .x-cp {
+        margin-top: 16px;
+        padding: 20px 22px;
+        border-radius: var(--r-l);
+        border: 1px solid #e3dbf1;
+        background: linear-gradient(140deg, rgba(246, 221, 228, 0.6), rgba(230, 224, 243, 0.6));
+      }
+      .x-cp h3 {
+        font: var(--type-heading);
+        color: var(--x-ink);
+      }
+      .x-stars {
+        font-variant-numeric: tabular-nums;
+      }
+      .x-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 26px;
+        transform: translate(-50%, 16px);
+        padding: 10px 18px;
+        border-radius: var(--r-pill);
+        background: var(--fill-primary);
+        color: var(--text-primary-on);
+        font: var(--type-tag);
+        opacity: 0;
+        pointer-events: none;
+        transition: all var(--dur-quick) var(--ease-out);
+      }
+      .x-toast.is-on {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      .x-sink {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+      }
+      @media (max-width: 640px) {
+        .x-duo {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <section class="section" id="make">
+          <div class="head">
+            <p class="head__eyebrow">双女主 · 百合 · 人设生成</p>
+            <h2>一键抽一对她和她。</h2>
+            <p class="head__sub">选个背景和套路，剩下的交给缘分。</p>
+          </div>
+
+          <p class="fineprint" style="margin-bottom: 2px">背景设定</p>
+          <div class="x-chipset" id="setChips"></div>
+          <p class="fineprint" style="margin: 16px 0 2px">相处套路</p>
+          <div class="x-chipset" id="tropeChips"></div>
+
+          <div class="links" style="margin-top: 20px; align-items: center">
+            <button class="x-go" id="go" type="button">生成我的CP 🌷</button>
+            <span class="pill" id="count">今晚已嗑了 0 对</span>
+          </div>
+
+          <div class="x-duo" id="duo" style="margin-top: 22px"></div>
+          <div id="cpBox"></div>
+
+          <div class="links" style="margin-top: 16px" id="tools" hidden>
+            <button class="btn" type="button" data-act="both">换一对</button>
+            <button class="btn" type="button" data-act="a">只换左边</button>
+            <button class="btn" type="button" data-act="b">只换右边</button>
+            <button class="btn" type="button" data-act="copy">复制人设</button>
+          </div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>百合万岁 🌷 仅供娱乐和创作灵感</p>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"
+          ><span class="hark-mark"></span><span>built by hark</span></a
+        >
+      </footer>
+    </div>
+    <div class="x-toast" id="toast" role="status" aria-live="polite"></div>
+    <textarea class="x-sink" id="sink" aria-hidden="true" tabindex="-1"></textarea>
+
+    <script src="hark.js"></script>
+    <script>
+      const SETS = ["随机", "校园", "都市职场", "古风", "娱乐圈", "奇幻"];
+      const TROPES = [
+        "随机",
+        "青梅竹马",
+        "死对头变恋人",
+        "先婚后爱",
+        "学姐学妹",
+        "双向暗恋",
+        "欢喜冤家",
+        "大小姐×保镖",
+      ];
+      const NAMES = {
+        modern: {
+          xing: ["林", "许", "苏", "江", "顾", "温", "陆", "宋", "周", "叶"],
+          ming: [
+            "知夏",
+            "南乔",
+            "星遥",
+            "予安",
+            "念安",
+            "栀言",
+            "清欢",
+            "书禾",
+            "小满",
+            "可晴",
+            "亦柔",
+            "斯年",
+          ],
+        },
+        gufeng: {
+          xing: ["沈", "苏", "谢", "裴", "慕容", "云", "萧", "柳", "姜", "白"],
+          ming: [
+            "清辞",
+            "晚棠",
+            "昭宁",
+            "簪雪",
+            "疏月",
+            "怀瑾",
+            "绾绾",
+            "折枝",
+            "问筝",
+            "阿鸾",
+            "青梧",
+            "长欢",
+          ],
+        },
+      };
+      const IDENT = {
+        校园: [
+          "高三文科班第一",
+          "校辩论队队长",
+          "天文社社长",
+          "校篮球队控卫",
+          "转学来的插班生",
+          "广播站当红主播",
+          "美术生，画室常驻",
+          "物理竞赛保送生",
+        ],
+        都市职场: [
+          "广告公司创意总监",
+          "刚入职的实习策划",
+          "三甲医院心外科医生",
+          "独立咖啡店老板",
+          "跑社会线的记者",
+          "后端开发组长",
+          "自由插画师",
+          "律所新晋合伙人",
+        ],
+        古风: [
+          "将军府嫡女",
+          "江湖排名第三的剑客",
+          "太医院唯一的女医官",
+          "云州首富家的小姐",
+          "绣坊里的哑巴绣娘",
+          "镇守北境的女将军",
+          "游历四方的说书人",
+          "皇城司暗卫",
+        ],
+        娱乐圈: [
+          "顶流女爱豆队长",
+          "三金影后",
+          "十八线待爆小花",
+          "半路出道的歌手",
+          "金牌经纪人",
+          "综艺常驻嘉宾",
+          "舞台导演",
+          "声乐老师兼作曲人",
+        ],
+        奇幻: [
+          "魔法学院首席",
+          "龙族最后的守护者",
+          "星港的机械师",
+          "被放逐的月之祭司",
+          "佣兵团团长",
+          "能听见植物说话的药师",
+          "时间观测站的记录员",
+          "会读心的旅行占卜师",
+        ],
+      };
+      const TAGS_COOL = [
+        "清冷学霸",
+        "高冷御姐",
+        "腹黑大小姐",
+        "飒爽女将军",
+        "冷面保镖",
+        "毒舌天才",
+        "沉静画家",
+        "寡言剑客",
+        "优雅影后",
+        "理智谋士",
+      ];
+      const TAGS_WARM = [
+        "元气小太阳",
+        "软萌甜妹",
+        "话痨开心果",
+        "热烈追爱少女",
+        "憨直小狼狗",
+        "黏人小尾巴",
+        "爱笑的邻家姐姐",
+        "横冲直撞的学妹",
+        "好奇心旺盛的旅人",
+        "嘴硬心软的刺头",
+      ];
+      const HAIR_STYLES = ["长直发", "高马尾", "短发", "双马尾", "波浪卷", "丸子头"];
+      const HAIR_COLORS = [
+        ["墨黑", "#2f2a33"],
+        ["冷棕", "#5a4336"],
+        ["奶茶棕", "#a8836a"],
+        ["浅金", "#d9b779"],
+        ["雾霾蓝", "#7f90ad"],
+        ["樱花粉", "#e8a9bd"],
+        ["丁香紫", "#a898cf"],
+        ["亚麻灰", "#9b9490"],
+      ];
+      const EYES = [
+        ["圆杏眼，眼神亮亮的", "round"],
+        ["细长狐狸眼", "narrow"],
+        ["微垂的小狗眼", "droopy"],
+        ["桃花眼，眼尾上挑", "narrow"],
+        ["清澈鹿眼", "round"],
+        ["慵懒半阖的眼", "droopy"],
+      ];
+      const HEIGHT = ["155cm", "158cm", "162cm", "165cm", "168cm", "172cm", "176cm"];
+      const OUTFIT = [
+        "白衬衫配百褶裙，校服永远一丝不苟",
+        "oversize卫衣加帆布鞋",
+        "剪裁利落的西装，袖口挽到小臂",
+        "针织开衫配长裙，口袋里有糖",
+        "黑色皮衣配马丁靴",
+        "素色广袖长衫，腰间一枚玉佩",
+        "月白劲装，外披银线披风",
+        "机场街拍常客，墨镜加棒球帽",
+        "亚麻长裙，手腕一串旧铃铛",
+        "法兰绒衬衫和颜料斑驳的围裙",
+      ];
+      const FEATURE = [
+        ["左眼下一颗泪痣", "mole"],
+        ["笑起来有小虎牙", "none"],
+        ["右脸一个酒窝", "none"],
+        ["戴细框眼镜", "glasses"],
+        ["头上常别一枚草莓发卡", "clip"],
+        ["耳垂一只小月牙耳钉", "none"],
+        ["锁骨下有一道旧疤", "none"],
+        ["指尖总沾着颜料", "none"],
+        ["发间别着银色小发夹", "clip"],
+        ["眉骨一点浅浅的痣", "mole"],
+      ];
+      const TRAITS = [
+        "嘴上刻薄",
+        "行动力爆表",
+        "极度护短",
+        "慢热",
+        "钝感十足",
+        "心软得要命",
+        "爱记仇但只记三秒",
+        "强迫症",
+        "酒品很差",
+        "睡前必须开小夜灯",
+        "认真起来六亲不认",
+        "怕黑",
+      ];
+      const GAP = [
+        "怕打雷，一响就往人怀里钻",
+        "会偷偷给流浪猫买罐头",
+        "在厨房能把水烧糊",
+        "追剧哭得稀里哗啦",
+        "喝一口酒就脸红到耳朵",
+        "手机壳是十年前的少女漫联名",
+        "偷偷写了三本肉麻情诗",
+        "被夸一句就僵在原地",
+        "背地里偷练告白台词",
+        "收集所有对方给过的便利贴",
+      ];
+      const SAY = [
+        "「别靠这么近。」（没有后退半步）",
+        "「我只说一次，听好了。」",
+        "「唔……再给我两分钟。」",
+        "「你怎么又在看我？」",
+        "「我陪你去。」",
+        "「这次算我欠你的。」",
+        "「闭嘴，抱紧。」",
+        "「我不是担心你，只是顺路。」",
+        "「今天也要开开心心的哦！」",
+        "「学姐，我可以牵你的手吗？」",
+      ];
+      const MEET = [
+        "图书馆最里面那排书架，同时伸手去拿最后一本书。",
+        "暴雨天只剩一把伞的公交站台。",
+        "凌晨三点的便利店，关东煮只剩最后一颗丸子。",
+        "后台走廊，一个补妆一个撞翻了口红。",
+        "练习室的镜子前，一个在跳舞一个在偷看。",
+        "城墙根下，一个躲追兵一个在煮酒。",
+        "医院天台，两个人都在躲班。",
+        "魔法学院报到日，被分到同一间宿舍。",
+        "电梯停电，困在十八楼和十九楼之间。",
+        "她把匕首抵在对方喉间，对方却问她吃饭了没。",
+      ];
+      const SCENE = [
+        "发烧那晚，她守了一整夜，天亮时手还握着没松开。",
+        "全场灯灭，她在台下举起唯一一块应援牌。",
+        "雨里一个接一个的台阶，她弯下腰说：上来，我背你。",
+        "她替对方挡下那一剑，轻描淡写地说「疼吗」。",
+        "庆功宴散场，两个人在天台分一罐啤酒，谁都没先开口。",
+        "她把那封写了七年的信，终于塞进了对方的课本。",
+        "机场送别，广播响第三次时她转身跑了回来。",
+        "她第一次在镜头前牵起对方的手，然后再没松开。",
+        "吵完架的深夜，门铃响了，门口是一碗还冒热气的粥。",
+        "她说「我们结婚只是合约」，却记下了对方所有的忌口。",
+      ];
+      const REL = {
+        青梅竹马: "从小一起长大，什么都分着吃，唯独没分清心意。",
+        死对头变恋人: "见面就吵，吵到全世界都看出来她们在乎彼此。",
+        先婚后爱: "先盖了章，再慢慢学着心动。",
+        学姐学妹: "一个在前面走，一个追着她的背影长大。",
+        双向暗恋: "都以为是单恋，于是各自小心翼翼地喜欢了很久。",
+        欢喜冤家: "一个挑事一个接招，吵吵闹闹地过了一辈子。",
+        "大小姐×保镖": "她负责任性，她负责把她护在身后。",
+      };
+      const OPEN = [
+        (a, b, s) => `${s}里的第一次照面，${a.name}就知道这个人不好惹。`,
+        (a, b, s) => `${a.name}原本以为，这个${s}里不会再有什么值得记住的人。`,
+        (a, b, s) => `那年${s}的风很大，${a.name}的伞被吹翻在${b.name}脚边。`,
+      ];
+      const OPEN2 = [
+        (a, b) => `${b.name}笑起来的样子，像是把一整个夏天都带了进来。`,
+        (a, b) => `${b.name}偏偏喜欢站得离她很近，近到能听见心跳。`,
+        (a, b) => `${b.name}只是把一颗糖放在她桌上，说「先甜一下」。`,
+      ];
+      const OPEN3 = [
+        () => "后来的事她们都没说出口，但所有人都看懂了。",
+        () => "那天之后，她的名字就成了她所有句子的主语。",
+        () => "她们都以为这只是开始的一小步，其实早就走了很远。",
+      ];
+
+      const pick = (a) => a[Math.floor(Math.random() * a.length)];
+      const some = (a, n) => {
+        const c = a.slice();
+        const o = [];
+        while (o.length < n && c.length) o.push(c.splice(Math.floor(Math.random() * c.length), 1)[0]);
+        return o;
+      };
+      const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
+
+      let setting = "随机",
+        trope = "随机",
+        A = null,
+        B = null,
+        cp = null,
+        n = 0;
+
+      function chips(box, list, cur, on) {
+        box.innerHTML = list
+          .map(
+            (t) =>
+              `<button class="x-chip" type="button" aria-pressed="${t === cur}">${t}</button>`
+          )
+          .join("");
+        [...box.children].forEach((b) =>
+          b.addEventListener("click", () => {
+            [...box.children].forEach((x) => x.setAttribute("aria-pressed", x === b));
+            on(b.textContent);
+          })
+        );
+      }
+
+      function realSetting() {
+        return setting === "随机" ? pick(SETS.slice(1)) : setting;
+      }
+      function realTrope() {
+        return trope === "随机" ? pick(TROPES.slice(1)) : trope;
+      }
+
+      function person(set, cool) {
+        const pool = set === "古风" ? NAMES.gufeng : NAMES.modern;
+        const given = pick(pool.ming);
+        const hair = pick(HAIR_COLORS);
+        const eye = pick(EYES);
+        const feat = pick(FEATURE);
+        return {
+          name: pick(pool.xing) + given,
+          given,
+          age: set === "校园" ? 16 + Math.floor(Math.random() * 4) : 20 + Math.floor(Math.random() * 12),
+          ident: pick(IDENT[set]),
+          tag: pick(cool ? TAGS_COOL : TAGS_WARM),
+          hairStyle: pick(HAIR_STYLES),
+          hairName: hair[0],
+          hairHex: hair[1],
+          eye: eye[0],
+          eyeKind: eye[1],
+          height: pick(HEIGHT),
+          outfit: pick(OUTFIT),
+          featName: feat[0],
+          acc: feat[1],
+          traits: some(TRAITS, 3),
+          gap: pick(GAP),
+          say: pick(SAY),
+        };
+      }
+
+      function portrait(p) {
+        const h = p.hairHex,
+          k = p.eyeKind;
+        let hair = `<path d="M34,82 C34,44 106,44 106,82 C106,58 92,50 70,50 C48,50 34,58 34,82 Z" fill="${h}"/>`;
+        if (p.hairStyle === "长直发")
+          hair += `<path d="M34,74 L34,134 L46,134 L46,78 Z M106,74 L106,134 L94,134 L94,78 Z" fill="${h}"/>`;
+        if (p.hairStyle === "高马尾")
+          hair += `<path d="M100,56 C122,56 126,86 112,112 C120,84 112,66 96,64 Z" fill="${h}"/>`;
+        if (p.hairStyle === "短发")
+          hair += `<path d="M34,74 L34,96 L44,96 L44,78 Z M106,74 L106,96 L96,96 L96,78 Z" fill="${h}"/>`;
+        if (p.hairStyle === "双马尾")
+          hair += `<ellipse cx="28" cy="96" rx="11" ry="20" fill="${h}"/><ellipse cx="112" cy="96" rx="11" ry="20" fill="${h}"/>`;
+        if (p.hairStyle === "波浪卷")
+          hair += `<path d="M34,74 C22,96 30,112 24,130 C42,124 40,104 46,84 Z M106,74 C118,96 110,112 116,130 C98,124 100,104 94,84 Z" fill="${h}"/>`;
+        if (p.hairStyle === "丸子头")
+          hair += `<circle cx="70" cy="40" r="13" fill="${h}"/>`;
+        const eyes =
+          k === "round"
+            ? `<circle cx="58" cy="82" r="4.2" fill="#2f2a33"/><circle cx="82" cy="82" r="4.2" fill="#2f2a33"/>`
+            : k === "narrow"
+              ? `<path d="M52,82 Q58,77 64,82" stroke="#2f2a33" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M76,82 Q82,77 88,82" stroke="#2f2a33" stroke-width="2.4" fill="none" stroke-linecap="round"/>`
+              : `<path d="M52,80 Q58,88 64,80" stroke="#2f2a33" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M76,80 Q82,88 88,80" stroke="#2f2a33" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+        let acc = "";
+        if (p.acc === "glasses")
+          acc = `<g stroke="#6b4a57" stroke-width="1.6" fill="none"><circle cx="58" cy="82" r="10"/><circle cx="82" cy="82" r="10"/><path d="M68,82 L72,82"/></g>`;
+        if (p.acc === "clip")
+          acc = `<rect x="94" y="58" width="14" height="6" rx="3" fill="#e8768f" transform="rotate(-18 101 61)"/>`;
+        if (p.acc === "mole") acc = `<circle cx="57" cy="91" r="1.8" fill="#8a5a66"/>`;
+        return `<svg width="140" height="150" viewBox="0 0 140 150" role="img" aria-label="${p.name}的简笔画头像"><circle cx="70" cy="84" r="34" fill="#fbeadf" stroke="#e8cdbd" stroke-width="1.5"/>${hair}${eyes}<path d="M65,100 Q70,105 75,100" stroke="#c98596" stroke-width="2.2" fill="none" stroke-linecap="round"/>${acc}</svg>`;
+      }
+
+      function cardHTML(p, side) {
+        return `<article class="x-card" id="card-${side}">
+          <div class="x-port">${portrait(p)}</div>
+          <h3>${p.name} <span class="pill">${p.age}岁</span></h3>
+          <p class="fineprint">${p.ident} · ${p.tag}</p>
+          <dl class="x-dl">
+            <div><dt>外貌</dt><dd>${p.hairName}${p.hairStyle}，${p.eye}，${p.height}</dd></div>
+            <div><dt>穿搭</dt><dd>${p.outfit}</dd></div>
+            <div><dt>特征</dt><dd>${p.featName}</dd></div>
+            <div><dt>性格</dt><dd>${p.traits.join(" · ")}</dd></div>
+            <div><dt>反差萌</dt><dd>${p.gap}</dd></div>
+            <div><dt>口头禅</dt><dd>${p.say}</dd></div>
+          </dl>
+        </article>`;
+      }
+
+      let curSet = "";
+      function makeCP(which) {
+        const s = curSet,
+          t = which === "both" || !cp ? realTrope() : cp.trope;
+        cp = {
+          set: s,
+          trope: t,
+          name: A.given[0] + B.given[0],
+          rel: REL[t],
+          meet: pick(MEET),
+          scene: pick(SCENE),
+          sweet: 3 + Math.floor(Math.random() * 3),
+          hurt: 1 + Math.floor(Math.random() * 4),
+          story: [pick(OPEN)(A, B, s), pick(OPEN2)(A, B), pick(OPEN3)()].join(""),
+        };
+      }
+
+      function cpHTML() {
+        return `<section class="x-cp">
+          <p class="fineprint">${cp.set} · ${cp.trope}</p>
+          <h3>CP名：${cp.name}</h3>
+          <dl class="x-dl">
+            <div><dt>关系</dt><dd>${cp.rel}</dd></div>
+            <div><dt>初遇</dt><dd>${cp.meet}</dd></div>
+            <div><dt>名场面</dt><dd>${cp.scene}</dd></div>
+            <div><dt>甜度</dt><dd class="x-stars">${stars(cp.sweet)}</dd></div>
+            <div><dt>虐度</dt><dd class="x-stars">${stars(cp.hurt)}</dd></div>
+            <div><dt>故事开头</dt><dd>${cp.story}</dd></div>
+          </dl>
+        </section>`;
+      }
+
+      const duo = document.getElementById("duo"),
+        cpBox = document.getElementById("cpBox"),
+        tools = document.getElementById("tools"),
+        toastEl = document.getElementById("toast");
+
+      function render() {
+        duo.innerHTML = cardHTML(A, "a") + cardHTML(B, "b");
+        cpBox.innerHTML = cpHTML();
+        tools.hidden = false;
+      }
+
+      function fade(fn) {
+        duo.classList.add("is-out");
+        cpBox.classList.add("is-out");
+        setTimeout(() => {
+          fn();
+          render();
+          duo.classList.remove("is-out");
+          cpBox.classList.remove("is-out");
+        }, 180);
+      }
+
+      function generate(which) {
+        if (which === "both" || !curSet) curSet = realSetting();
+        const s = curSet;
+        const isCool = (p) => TAGS_COOL.includes(p.tag);
+        if (which === "both") {
+          A = person(s, Math.random() < 0.5);
+          B = person(s, !isCool(A));
+        } else if (which === "a") A = person(s, !isCool(B));
+        else B = person(s, !isCool(A));
+        makeCP(which);
+        if (which === "both" || !which) {
+          n += 1;
+          document.getElementById("count").textContent = "今晚已嗑了 " + n + " 对";
+        }
+      }
+
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add("is-on");
+        setTimeout(() => toastEl.classList.remove("is-on"), 1800);
+      }
+
+      function plain(p) {
+        return `【${p.name}】${p.age}岁 ${p.ident} ${p.tag}
+外貌：${p.hairName}${p.hairStyle}，${p.eye}，${p.height}
+穿搭：${p.outfit}
+特征：${p.featName}
+性格：${p.traits.join("、")}
+反差萌：${p.gap}
+口头禅：${p.say}`;
+      }
+
+      function copyAll() {
+        const txt = `双女主人设 · ${cp.set} · ${cp.trope}
+${plain(A)}
+
+${plain(B)}
+
+CP名：${cp.name}
+关系：${cp.rel}
+初遇：${cp.meet}
+名场面：${cp.scene}
+甜度：${stars(cp.sweet)}　虐度：${stars(cp.hurt)}
+故事开头：${cp.story}`;
+        const btn = tools.querySelector('[data-act="copy"]');
+        btn.textContent = "已复制 ✓";
+        setTimeout(() => (btn.textContent = "复制人设"), 1800);
+        toast("已复制，快去写文吧");
+        const sink = () => fallback(txt, () => {});
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText)
+            navigator.clipboard.writeText(txt).catch(sink);
+          else sink();
+        } catch (e) {
+          sink();
+        }
+      }
+      function fallback(txt, done) {
+        const t = document.getElementById("sink");
+        t.value = txt;
+        t.select();
+        try {
+          document.execCommand("copy");
+          done();
+        } catch (e) {
+          toast("复制失败，请手动选择文本");
+        }
+      }
+
+      chips(document.getElementById("setChips"), SETS, setting, (v) => (setting = v));
+      chips(document.getElementById("tropeChips"), TROPES, trope, (v) => (trope = v));
+      document.getElementById("go").addEventListener("click", () => fade(() => generate("both")));
+      tools.addEventListener("click", (e) => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        const act = b.dataset.act;
+        if (act === "copy") copyAll();
+        else fade(() => generate(act));
+      });
+      generate("both");
+      n = 0;
+      document.getElementById("count").textContent = "今晚已嗑了 0 对";
+      render();
+    </script>
+  </body>
+</html>
