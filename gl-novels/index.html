@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>双女主小说检索站</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      :root {
+        --x-lilac: light-dark(#7a52b8, #c9b0f2);
+        --x-lilac-soft: light-dark(#efe8fa, #2e2740);
+        --x-blush-soft: light-dark(#fbeaf0, #3a2a32);
+        --x-lilac-line: light-dark(#7a52b84d, #c9b0f259);
+      }
+      .x-tools { display: grid; gap: 14px; }
+      .x-search {
+        display: flex; align-items: center; gap: 10px;
+        min-height: 48px; padding: 0 16px;
+        border-radius: var(--r-pill);
+        border: 1px solid var(--stroke-primary);
+        background: var(--fill-primary-on);
+        transition: border-color var(--dur-quick) ease, box-shadow var(--dur-quick) ease;
+      }
+      .x-search:focus-within { border-color: var(--x-lilac); box-shadow: 0 0 0 3px var(--x-lilac-soft); }
+      .x-search svg { flex: none; color: var(--text-secondary); }
+      .x-search input {
+        flex: 1; min-width: 0; height: 46px;
+        border: 0; outline: 0; background: transparent;
+        color: var(--text-primary); font: var(--type-body); font-size: 16px;
+      }
+      .x-search input::placeholder { color: var(--text-secondary); }
+      .x-clear {
+        flex: none; width: var(--tap); height: var(--tap); margin-right: -12px;
+        border: 0; border-radius: 50%; background: transparent;
+        color: var(--text-secondary); font: var(--type-body); cursor: pointer;
+      }
+      .x-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: space-between; }
+      .x-chips { display: flex; gap: 8px; }
+      .x-scroll {
+        overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        margin-inline: calc(var(--gutter) * -1); padding: 2px var(--gutter);
+        scroll-snap-type: x proximity;
+      }
+      .x-scroll::-webkit-scrollbar { display: none; }
+      .x-chip {
+        flex: none; display: inline-flex; align-items: center; gap: 6px;
+        min-height: var(--tap); padding: 0 14px;
+        border-radius: var(--r-pill);
+        border: 1px solid var(--stroke-primary);
+        background: var(--fill-primary-on); color: var(--text-primary);
+        font: var(--type-label); white-space: nowrap; cursor: pointer;
+        scroll-snap-align: start;
+        transition: background var(--dur-quick) ease, border-color var(--dur-quick) ease;
+      }
+      .x-chip b {
+        min-width: 20px; padding: 1px 6px; border-radius: var(--r-pill);
+        background: var(--fill-tertiary); color: var(--text-secondary);
+        font: var(--type-tag); text-align: center;
+      }
+      .x-chip[aria-pressed="true"] { background: var(--x-lilac-soft); border-color: var(--x-lilac); }
+      .x-chip[aria-pressed="true"] b { background: var(--x-lilac); color: var(--fill-primary-on); }
+      .x-chip:disabled { opacity: 0.5; cursor: default; }
+      .x-random {
+        display: inline-flex; align-items: center; gap: 8px;
+        min-height: var(--tap); padding: 0 16px;
+        border-radius: var(--r-pill); border: 0;
+        background: var(--x-blush-soft); color: var(--text-primary);
+        font: var(--type-label); cursor: pointer;
+      }
+      .x-random:hover { box-shadow: inset 0 0 0 100px var(--hover-wash); }
+      .x-count { font: var(--type-small); color: var(--text-secondary); }
+      .x-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+      @media (min-width: 900px) { .x-list { grid-template-columns: 1fr 1fr; } }
+      .x-book {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px;
+        height: 100%; padding: 16px 16px 16px 18px;
+        border-radius: var(--r-m); background: var(--fill-tertiary);
+        color: var(--text-primary); text-decoration: none;
+        border: 1px solid transparent;
+        transition: border-color var(--dur-quick) ease, background var(--dur-quick) ease;
+      }
+      .x-book:hover { border-color: var(--x-lilac-line); }
+      .x-book:active { background: var(--x-lilac-soft); }
+      .x-book.is-picked { border-color: var(--x-lilac); background: var(--x-lilac-soft); animation: x-pulse 1.2s var(--ease-out) 2; }
+      @keyframes x-pulse { 50% { box-shadow: 0 0 0 6px var(--x-lilac-soft); } }
+      @media (prefers-reduced-motion: reduce) { .x-book.is-picked { animation: none; } }
+      .x-book h3 { font: var(--type-body-strong); font-weight: var(--weight-bold); font-size: var(--size-prose); }
+      .x-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 6px; font: var(--type-small); color: var(--text-secondary); }
+      .x-status { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: var(--r-pill); background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); }
+      .x-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--fill-system-green); }
+      .x-status--on::before { background: var(--fill-system-orange); }
+      .x-blurb {
+        margin-top: 8px; font: var(--type-small); color: var(--text-secondary);
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      }
+      .x-go {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-height: var(--tap); padding: 0 14px;
+        border-radius: var(--r-s);
+        background: var(--fill-primary); color: var(--text-primary-on);
+        font: var(--type-label); white-space: nowrap;
+      }
+      .x-empty { padding: 28px 20px; border-radius: var(--r-m); border: 1px dashed var(--stroke-primary); text-align: center; color: var(--text-secondary); }
+      .x-empty button { margin-top: 12px; }
+      .x-entries .btn { min-height: var(--tap); }
+      @media (max-width: 599px) {
+        .x-book { padding: 14px 12px 14px 14px; gap: 10px; }
+        .x-go { padding: 0 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <header class="nav glass" data-auto></header>
+      <main class="main">
+        <section class="hero">
+          <div class="hero__copy">
+            <p class="hero__eyebrow">GL · 百合 · 双女主</p>
+            <h1>双女主小说检索站 🌷</h1>
+            <p class="hero__sub">按分类挑文，点「去看」直接跳到晋江正版页面</p>
+          </div>
+        </section>
+
+        <section class="section" id="find" data-nav="找书">
+          <div class="head">
+            <h2>搜一搜，或者按分类慢慢挑。</h2>
+          </div>
+          <div class="x-tools">
+            <label class="x-search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="q" type="search" placeholder="搜书名、作者或简介" aria-label="搜索书名、作者或简介" autocomplete="off" enterkeyhint="search" />
+              <button class="x-clear" id="clear" type="button" aria-label="清空搜索" hidden>✕</button>
+            </label>
+            <div class="x-row">
+              <div class="x-chips" id="status" role="group" aria-label="连载状态"></div>
+              <button class="x-random" id="random" type="button">🎲 随便来一本</button>
+            </div>
+            <div class="x-scroll">
+              <div class="x-chips" id="cats" role="group" aria-label="分类"></div>
+            </div>
+            <p class="x-count" id="count" aria-live="polite"></p>
+            <ul class="x-list" id="list"></ul>
+          </div>
+        </section>
+
+        <section class="section" id="more" data-nav="更多入口">
+          <div class="head">
+            <h2>更多正版入口</h2>
+            <p class="head__sub">晋江榜单、英文正版轻小说和百合作品总表。</p>
+          </div>
+          <div class="links x-entries">
+            <a class="btn" href="https://www.jjwxc.net/channeltoplist.php?rankgroup=42&rchannelid=9" target="_blank" rel="noopener">晋江百合频道 · 霸王票总榜</a>
+            <a class="btn" href="https://www.jjwxc.net/channeltopten.php?channelid=109" target="_blank" rel="noopener">晋江百合 · 月度排行榜</a>
+            <a class="btn" href="https://www.jjwxc.net/topten.php?orderstr=8&t=6" target="_blank" rel="noopener">晋江百合 · 长篇字数榜</a>
+            <a class="btn" href="https://sevenseasentertainment.com/series/adachi-and-shimamura-light-novel" target="_blank" rel="noopener">日系百合轻小说《安达与岛村》（英文正版，Seven Seas）</a>
+            <a class="btn" href="https://sevenseasentertainment.com/series/bloom-into-you-light-novel/" target="_blank" rel="noopener">《终将成为你：关于佐伯沙弥香》轻小说（Seven Seas）</a>
+            <a class="btn" href="https://en.wikipedia.org/wiki/List_of_yuri_works" target="_blank" rel="noopener">百合作品大全（维基百科）</a>
+          </div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>数据来自晋江百合频道榜单（2026年10月）· 部分章节需在晋江付费订阅 · 只收正版，支持作者</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+      </footer>
+    </div>
+    <script src="hark.js"></script>
+    <script>
+      const J = "https://www.jjwxc.net/onebook.php?novelid=";
+      const BOOKS = {
+        娱乐圈: [
+          { title: "放肆[娱乐圈]", author: "玄笺", status: "完结", tag: "近代现代-爱情", desc: "年仅22岁的唐若遥摘下影后桂冠，前途光明。隔天媒体铺天盖地发通稿，盛誉其为“小秦意浓”。唐若遥粉丝怒不……", url: J + "4032130" },
+          { title: "影后有堵墙（GL）", author: "云惘然", status: "完结", tag: "近代现代-爱情", desc: "两届金星球奖影后于念冰结束拍摄回家，凳子没坐热，瓜刚吃两口，卧室的墙就被砸穿了……隔壁是半年前为了蹭热搜与自己假表白的……", url: J + "3975220" },
+          { title: "疯美人的重生 [娱乐圈]", author: "叶以秋", status: "完结", tag: "近代现代-爱情", desc: "豪华公寓的浴缸内惊现一具年轻女尸，是当红女星乔苒若。她生前是个为戏而生的戏疯子，又美又疯，却风评极差，死后更是身败名裂，众叛亲离。", url: J + "4513642" },
+          { title: "你不是笔直笔直的天后吗？", author: "一跳跳到山外山", status: "连载", tag: "近代现代-爱情", desc: "青年舞蹈家 & 影音双栖天后。破圈，跨界，一切由一场真人秀开始……细水长流，8岁年龄差。", url: J + "2566796" },
+          { title: "上娃综后，影后渣A洗白了", author: "张修竹", status: "完结", tag: "近代现代-爱情", desc: "每一个霸道总裁狗血文（GL）里都有一个小白花柔弱女主，在等来正主之前，还有一个负心薄幸的前女友反派渣A。", url: J + "6963936" },
+          { title: "百老汇再无佳人", author: "墨兰疏影", status: "完结", tag: "近代现代-爱情", desc: "每只白天鹅心中都住着一只黑天鹅，好莱坞史上最特立独行的影后阿德莱德也未能免俗。“偏爱月色动人，怎奈夜色弄人。”", url: J + "5122676" },
+        ],
+        都市甜宠: [
+          { title: "我老婆，反派大佬，超可爱", author: "穹灰", status: "完结", tag: "近代现代-爱情", desc: "古早火葬场小说里，经常有这样一群反派大佬：偏执、疯批、病娇，占有欲超强，常因一些常人难以理解的理由，疯狂地爱上女主角……", url: J + "7632356" },
+          { title: "首富千金的金丝雀", author: "怀昭", status: "完结", tag: "近代现代-爱情", desc: "怀昭的都市甜文，故事简介请到晋江原文页查看。", url: J + "6125457" },
+          { title: "金牌律师Alpha和她的江医生", author: "青云岫", status: "完结", tag: "近代现代-爱情", desc: "ABO题材，双御姐：金牌律师Alpha与江医生。", url: J + "4503004" },
+          { title: "屠队长和她的沈医生", author: "青云岫", status: "完结", tag: "近代现代-爱情", desc: "屠队长与沈医生的故事，简介请到晋江原文页查看。", url: J + "2565377" },
+          { title: "今天仍不知老婆是首富", author: "叶无枝", status: "完结", tag: "近代现代-爱情", desc: "沈知言被母亲安排去相亲。听说对方是秦家的女儿，长得漂亮，活泼可爱，还……", url: J + "5045581" },
+          { title: "非典型离婚", author: "白渡鸦", status: "完结", tag: "近代现代-爱情", desc: "一篇A强O更强的离婚火葬场，自设ABO仅有信息素，离婚事出有因，A没渣过。前期慢热，现实与回忆交叉。", url: J + "9690619" },
+          { title: "大小姐想让我从良", author: "冬日解剖", status: "完结", tag: "近代现代-爱情", desc: "初见姜颜林，她是好友暗恋的女人；再见，她是好友追求的女人；三见，裴挽意想：朋友什么的，不要也行。", url: J + "5271247" },
+          { title: "白云行空于浅阳", author: "稳重王", status: "完结", tag: "近代现代-爱情", desc: "这是间谍和演员的故事。“我以为你会选蓝色。”钟浅晴戴上头盔，熟练地跨过自行车车座……", url: J + "8461186" },
+        ],
+        校园青春: [
+          { title: "糖柠之恋", author: "夏恋樱火", status: "完结", tag: "近代现代-爱情", desc: "同爱人相守时的幸福，如梦似幻，却又无比真实；昨日的悲欢离合，像过往云烟，但从不曾被亲历者忘怀。", url: J + "4890379" },
+          { title: "贵族学院恋爱模拟器", author: "晓梦致幻生", status: "完结", tag: "近代现代-爱情", desc: "为了探索所有剧情她不停回档，NPC却一不小心就黑化：豪门大小姐要对她强制爱，特优生学霸转眼变成跟踪狂……", url: J + "7699889" },
+          { title: "青梅", author: "月令辰", status: "完结", tag: "古色古香-爱情", desc: "“郎骑竹马来，绕床弄青梅。”齐映州齐官人有一妹妹，年方二八，姓陆，名青蕤，待字闺中。", url: J + "4534207" },
+        ],
+        古风宫廷: [
+          { title: "凰涅天下(GL)", author: "君朝西", status: "完结", tag: "古色古香-传奇", desc: "卫希颜在一次血战中跌落到千年前的北宋。她一心寻求归家之路，孰料重生身世隐着重重秘密，被迫踏入江湖，从江湖到朝局……", url: J + "340107" },
+          { title: "兰陵风流", author: "君朝西", status: "完结", tag: "架空历史-剧情", desc: "一个强盛、风流、大势之下共争锋的时代。她是萧氏之子，身世却错综复杂，在这个帝国中一步步……", url: J + "2161744" },
+          { title: "养丞", author: "宁远", status: "完结", tag: "古色古香-传奇", desc: "童少悬第一次见到家道中落的唐三娘唐见微，是在长公主的赏春雅聚上，见识了她的绝世容貌，更见识了她巧舌如簧、表里不一。", url: J + "3955358" },
+          { title: "江山和我，女皇都要", author: "怀昭", status: "完结", tag: "架空历史-爱情", desc: "高冷傲娇女皇O × 温柔宠溺天才A。上位者为爱低头，双强女主、双高智商、精彩权谋。", url: J + "6249937" },
+          { title: "山川月", author: "苏弦_", status: "完结", tag: "古色古香-剧情", desc: "恶人或英雄，权柄或信义，抉择皆在一念间。温明裳入京初识洛清河时，对方是同僚口中善恶莫辨的少年将军。", url: J + "5267535" },
+          { title: "银锁金铃记gl", author: "黄连苦寒", status: "完结", tag: "古色古香-爱情", desc: "神仙谷主破星老人多年前觅得良徒二人，均是天纵英才。数年之后，见解分歧的两人愤然离谷……", url: J + "1890105" },
+          { title: "郡马是个药罐子", author: "鲨鱼傻不傻", status: "完结", tag: "古色古香-爱情", desc: "听说威远将军家的小公子、未来的郡马爷是个药罐子，文不成武不就还有隐疾。林思慎听着外头的传闻，心里乐开了花。", url: J + "2730512" },
+          { title: "女首辅宠妻日常", author: "岁岁明美", status: "完结", tag: "架空历史-爱情", desc: "沈砚清重生回十四岁，仍是寒门里被全家寄予厚望的“读书苗子”。上一世她权倾朝野，却满门抄斩……", url: J + "9272354" },
+          { title: "鲤跃龙门", author: "融泥", status: "完结", tag: "架空历史-爱情", desc: "皇太女朝不保夕的登极之路 vs 女状元一言难尽的复仇之路。皇帝临死时立她为皇太女，后来却奇迹康复……", url: J + "3384932" },
+        ],
+        仙侠修真: [
+          { title: "昆仑卿", author: "火柴乌鸦", status: "完结", tag: "架空历史-仙侠", desc: "谢挚起于大荒，十六岁名动中州，来到歧都受封。紫宸殿上仙光灿灿，人皇自王座上微笑，先许仙材地宝，谢挚不应……", url: J + "6950608" },
+          { title: "执子之手gl[修真]", author: "御风流", status: "完结", tag: "架空历史-仙侠", desc: "孟随云初见楚摘星时，她还是众人眼中的小傻子。孟随云手把手带她走上修仙之路，听这个奶团子软糯糯喊师姐，有求必应。", url: J + "4354338" },
+          { title: "执剑抱走师姐(穿书）", author: "河沐", status: "完结", tag: "架空历史-爱情", desc: "伏颜穿进了一本男频修仙后宫文，男主一边修仙成神一边收获后宫。虽然被原剧情雷得外焦里嫩……", url: J + "4390703" },
+          { title: "清冷龙女她总想杀我", author: "长猫帽子", status: "完结", tag: "架空历史-爱情", desc: "貌美青蛇 × 冰山龙女，偏剧情，HE。", url: J + "5892034" },
+          { title: "与师为妻", author: "燎汐", status: "完结", tag: "架空历史-仙侠", desc: "鹤卿，修为低下、资质平平，离尧山上默默无名的外门弟子；月泽，天资……", url: J + "6999934" },
+          { title: "传闻中的999级反派仙尊gl", author: "万言不值一块钱", status: "完结", tag: "架空历史-仙侠", desc: "兢兢业业跟随事业统的无晴仙尊璃月白终于迎来飞升，却因男主的“肾见钟情”飞升失败。", url: J + "4040288" },
+        ],
+        武侠江湖: [
+          { title: "沧海剑衣录", author: "林梢一点风微起", status: "连载", tag: "架空历史-武侠", desc: "江湖是阴谋诡计、刀光剑影，是侠客的风花雪月、宗派的轮替兴衰。当今武林，正邪两立……", url: J + "8343813" },
+          { title: "侠路相逢", author: "满襟明月", status: "完结", tag: "古色古香-武侠", desc: "危兰，侠道盟危门大小姐；方灵轻，造极峰屏翳堂小妖女。两派分属正邪，水火不容，厮杀争斗已有两百余年。", url: J + "5234943" },
+          { title: "仗剑行", author: "澜野", status: "完结", tag: "古色古香-武侠", desc: "群像剧情流，感情为辅；高武低玄，不BE。不周崖下，有个女魔头……", url: J + "5185470" },
+          { title: "望尽十三川", author: "月落西河", status: "完结", tag: "架空历史-武侠", desc: "HE养成文，非纯感情流，以大量剧情为主。", url: J + "4836198" },
+        ],
+        末世科幻星际: [
+          { title: "变丧尸后死对头过分可爱", author: "白猫非白", status: "完结", tag: "幻想未来-爱情", desc: "宿醉醒来，世界迎来了末日。陆嘉一开门，一头丧尸直接将她扑倒在地，撞了个头晕目眩……", url: J + "5674383" },
+          { title: "所以谁是前女友？", author: "千雨成", status: "完结", tag: "幻想未来-科幻", desc: "前期末世、中期种田、后期星际。睚眦必报暴躁首席研究员 vs 杀伐决绝隐忍帝国上将，强强追妻。", url: J + "5273321" },
+          { title: "蜂悲", author: "深雨", status: "完结", tag: "幻想未来-科幻", desc: "陆地化为海洋，科技与魔法碰撞。空岛之上，如蜜蜂热诚的女孩向群星伸出了手；深海遗迹的怪物，夜空宇宙的人外……", url: J + "6752984" },
+          { title: "流浪者的星际冒险指南[哨兵向导]", author: "辛师语", status: "完结", tag: "幻想未来-科幻", desc: "一个慢吞吞的星际冒险故事：飞船青霜号上人们的过去，和正在进行的奇妙旅程。林娜·阿德尔，A+级哨兵，绰号灰枭……", url: J + "3070036" },
+          { title: "末日来电", author: "第一信使", status: "完结", tag: "近代现代-奇幻", desc: "2031年，丧尸爆发。绝境中奄奄一息的女人，一部老旧手机突然亮起，奇迹般拨出号码，信号连接到遥远的十年前。", url: J + "5674408" },
+          { title: "七个疯美老婆偏执我[快穿]", author: "仙珥", status: "完结", tag: "幻想未来-爱情", desc: "科研大佬喻素言死在末世，生前遭女朋友劈腿，一念嗔心堕落成鬼，死后被一个拯救系统绑定……", url: J + "7563860" },
+        ],
+        无限惊悚悬疑: [
+          { title: "惊悚剧本加载中[无限]", author: "晴笙悠", status: "完结", tag: "近代现代-惊悚", desc: "邪神攻 × 猫猫受，强强互宠，前期身份隐瞒：攻伪装陌生人，受的猫耳猫尾永久显形。", url: J + "10329020" },
+          { title: "母神慈悲［无限］", author: "笋沙丁", status: "完结", tag: "幻想未来-惊悚", desc: "死对头文学。黄铜是个泥巴人，眼耳口鼻、五脏六腑一样都没有。高高的棺材上站着长舌的鬼，哆哆嗦嗦递来一张宣传海报……", url: J + "9284434" },
+          { title: "除我以外，全员诡秘", author: "双尾喵喵", status: "完结", tag: "近代现代-奇幻", desc: "“恭喜，你被录取了。”陈晓嫒心想穿越后的好运真是一波接一波：转生孤儿开局，却被大富婆养母收养……", url: J + "4398932" },
+          { title: "唐谜", author: "书自清", status: "完结", tag: "古色古香-悬疑", desc: "东洲旧有台城客，身负凰涅埋血壑。万里回望十六载，一纸调令终复折。千羽惊起长安春，迷踪相往探幽门……", url: J + "3041779" },
+          { title: "侧写师小姐2", author: "雾漫青山", status: "完结", tag: "近代现代-爱情", desc: "分别8年的爱人重新站在身前，看她的眼睛全是恨。柳回笙想不明白，曾经牵着手在月亮下许下……", url: J + "9211509" },
+          { title: "镜面神域", author: "书自清", status: "完结", tag: "幻想未来-惊悚", desc: "她从坟墓中睁眼，仰望天际倒悬的另一个镜中世界。黄昏，血月，疯癫，幻梦，无尽黑暗的彼端……", url: J + "4927981" },
+        ],
+        快穿穿书: [
+          { title: "你不许再亲我啦[快穿]", author: "菠萝捞饭", status: "完结", tag: "近代现代-爱情", desc: "辛瑶貌美如花，妥妥一副小妖精模样，却在25岁这年不幸早逝——穷死了。为了执念，她和狗系统签订契约……", url: J + "4242013" },
+          { title: "拿着女配剧本和女主HE了［快穿］", author: "非宴", status: "完结", tag: "幻想未来-爱情", desc: "快穿大学新生向冕之误入排行榜第一的学姐的次元舱，被迫卷入了高难度小世界的任务之中。", url: J + "6639745" },
+          { title: "我和反派拼业绩！[快穿]", author: "涂图画画", status: "完结", tag: "近代现代-爱情", desc: "反派部连续十年的最佳员工顾烟景，被女主部拉了壮丁，专门攻略偏离剧情的反派boss。", url: J + "6977164" },
+          { title: "第138次遇到你gl", author: "万言不值一块钱", status: "完结", tag: "近代现代-爱情", desc: "第1次转生，反派被女主气死了；第2次，被女主打死了；……第138次，心累的反派打算跟女主和平相处。", url: J + "3132683" },
+          { title: "凭什么你当主角啊[穿书]", author: "湮秋", status: "完结", tag: "架空历史-爱情", desc: "慢节奏剧情向穿书文，书中多非完美人设，感情线到第三卷才有大幅进展。", url: J + "7773701" },
+          { title: "如何迅速成为主角GL（快穿）", author: "衣青箬", status: "完结", tag: "近代现代-爱情", desc: "巫洛阳受雇于主神，去拯救因世界意识混乱、主角黑化而即将毁灭的小世界。她要夺取主角的……", url: J + "5709825" },
+        ],
+        竞技职场: [
+          { title: "冰上女王", author: "福云酥", status: "完结", tag: "近代现代-传奇", desc: "花样滑冰竞技文。全国精英赛、大奖赛、四大洲赛、亚冬会、世锦赛、冬奥会——我将站在世界之巅。", url: J + "3041898" },
+          { title: "破网而出", author: "白渡鸦", status: "完结", tag: "近代现代-爱情", desc: "戴着冷酷严厉教练面具的妈型女友 × 除了打球哪里都很弱气的傲娇爱哭鬼大小姐。女子职业网球背景。", url: J + "9836834" },
+          { title: "电竞大神重回新手村", author: "十八发", status: "完结", tag: "近代现代-剧情", desc: "天才中单陶灼车祸后穿越到平行世界的比赛现场，众目睽睽下输了比赛。众人以为她是小白，不久后她却碾压了一堆职业选手。", url: J + "9256200" },
+          { title: "御情故纵", author: "八爪绾淑", status: "完结", tag: "近代现代-爱情", desc: "群像、搞笑、狗血、双女主。“你很可爱，我害怕别人抢走你……”", url: J + "8513446" },
+        ],
+        西幻奇幻: [
+          { title: "身为血族的我被人类表白了", author: "该去学习了", status: "完结", tag: "幻想未来-爱情", desc: "秦唯西公爵在血族是出了名的挑剔洁癖，幼年时就曾放言：“我的甜食必须入口像玫瑰一样浓郁……”", url: J + "5519418" },
+          { title: "女王的骑士［西幻］", author: "黎和里", status: "完结", tag: "架空历史-爱情", desc: "凯洛特一天会听见三十次自己的名字：三次来自沉默寡言的骑士队长，三次来自厨娘，剩下二十四次来自她服侍的主人，北境大公……", url: J + "7665834" },
+          { title: "龙与骑士姬gl", author: "墨洗羽", status: "完结", tag: "架空历史-爱情", desc: "熬夜打游戏爆肝而死，她穿进了游戏里，成了NPC牧羊少女，还一不小心救下了一个重伤的少女……", url: J + "3470682" },
+          { title: "今天也在看龙龙摇尾巴", author: "白白森", status: "连载", tag: "幻想未来-轻小说", desc: "婚姻合约中两个感情新手的笨拙恋爱！魔界权力更迭，主和派新魔王上位，事务繁重，一时忘记废除……", url: J + "9733708" },
+          { title: "地下丞", author: "我在找我的铁铲", status: "完结", tag: "架空历史-奇幻", desc: "苍秾的母亲是神农庄元老，她本人为人正直、乐善好施，城中却都传她清高自许、目中无人。", url: J + "8911026" },
+        ],
+      };
+
+      const ALL = [];
+      Object.entries(BOOKS).forEach(([cat, list]) => list.forEach((b) => ALL.push({ ...b, cat, id: ALL.length })));
+      const CATS = Object.keys(BOOKS);
+      const state = { q: "", status: "全部", cat: "全部" };
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+      function matchBase(b) {
+        if (state.status !== "全部" && b.status !== state.status) return false;
+        if (!state.q) return true;
+        const q = state.q.toLowerCase();
+        return (b.title + " " + b.author + " " + b.desc).toLowerCase().includes(q);
+      }
+      const current = () => ALL.filter((b) => matchBase(b) && (state.cat === "全部" || b.cat === state.cat));
+
+      function chip(label, count, pressed, key) {
+        return `<button class="x-chip" type="button" data-key="${esc(key)}" aria-pressed="${pressed}"${count === 0 && !pressed ? " disabled" : ""}>${esc(label)}${count == null ? "" : ` <b>${count}</b>`}</button>`;
+      }
+
+      function render() {
+        $("status").innerHTML = ["全部", "完结", "连载"].map((s) => chip(s, null, state.status === s, s)).join("");
+        const base = ALL.filter(matchBase);
+        $("cats").innerHTML =
+          chip("全部", base.length, state.cat === "全部", "全部") +
+          CATS.map((c) => chip(c, base.filter((b) => b.cat === c).length, state.cat === c, c)).join("");
+
+        const list = current();
+        $("count").textContent = list.length ? `共 ${list.length} 本` : "";
+        $("random").disabled = !list.length;
+        if (!list.length) {
+          $("list").innerHTML = `<li class="x-empty">没有找到符合条件的书，换个关键词试试？<br /><button class="btn" type="button" id="reset">清除筛选</button></li>`;
+          $("reset").onclick = () => { state.q = ""; state.status = "全部"; state.cat = "全部"; $("q").value = ""; $("clear").hidden = true; render(); };
+          return;
+        }
+        $("list").innerHTML = list
+          .map(
+            (b) => `<li><a class="x-book" id="b${b.id}" href="${esc(b.url)}" target="_blank" rel="noopener" aria-label="${esc(b.title)}，${esc(b.author)}，${b.status}，去晋江看">
+  <div>
+    <h3>${esc(b.title)}</h3>
+    <p class="x-meta"><span>${esc(b.author)}</span><span class="x-status${b.status === "连载" ? " x-status--on" : ""}">${b.status}</span><span class="pill">${esc(b.tag)}</span></p>
+    <p class="x-blurb">${esc(b.desc)}</p>
+  </div>
+  <span class="x-go" aria-hidden="true">去看 →</span>
+</a></li>`
+          )
+          .join("");
+      }
+
+      $("q").addEventListener("input", (e) => { state.q = e.target.value.trim(); $("clear").hidden = !e.target.value; render(); });
+      $("clear").addEventListener("click", () => { $("q").value = ""; state.q = ""; $("clear").hidden = true; render(); $("q").focus(); });
+      $("status").addEventListener("click", (e) => { const t = e.target.closest(".x-chip"); if (!t) return; state.status = t.dataset.key; render(); });
+      $("cats").addEventListener("click", (e) => {
+        const t = e.target.closest(".x-chip"); if (!t || t.disabled) return;
+        state.cat = t.dataset.key; render();
+        const now = $("cats").querySelector('[aria-pressed="true"]');
+        if (now) now.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      });
+      $("random").addEventListener("click", () => {
+        const list = current(); if (!list.length) return;
+        const pick = list[Math.floor(Math.random() * list.length)];
+        document.querySelectorAll(".x-book.is-picked").forEach((el) => el.classList.remove("is-picked"));
+        const el = $("b" + pick.id); if (!el) return;
+        void el.offsetWidth;
+        el.classList.add("is-picked");
+        el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        el.focus({ preventScroll: true });
+        clearTimeout(window.__pickT);
+        window.__pickT = setTimeout(() => el.classList.remove("is-picked"), 4000);
+      });
+      render();
+    </script>
+  </body>
+</html>
