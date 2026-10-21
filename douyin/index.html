@@ -50,7 +50,7 @@ video.media{width:92%}
 </style>
 </head>
 <body>
-<div class="top"><span data-t="mine">我的上传</span><span data-t="rec" class="act">推荐</span></div>
+<div class="top"><span data-t="mine">我的上传</span><span data-t="rec">推荐</span><span data-t="hark">Hark发的</span></div>
 <div id="feed"></div>
 <div class="bar"><span class="act" id="bHome">首页</span><span id="bRand">随机</span><div class="plus" id="bPlus">+</div><span id="bLike">喜欢</span><span id="bAbout">说明</span></div>
 <input type="file" id="file" accept="image/*,video/*" multiple hidden>
@@ -114,6 +114,7 @@ async function show(list,emptyMsg){feed.innerHTML='';feed.scrollTop=0;if(!list.l
 async function go(m){mode=m;document.querySelectorAll('.top span').forEach(s=>s.classList.toggle('act',s.dataset.t===m));
  if(m==='rec'){await loadHark();show([...HARK,...BUILTIN])}
  else if(m==='mine'){await dbp;const l=(await mine()).map(v=>({...v,src:URL.createObjectURL(v.blob),u:'我',a:'😎',own:1}));show(l,'<div style="font-size:48px">📱</div>还没有上传<br>点底部 <b>+</b> 选手机里的视频或动图<br><small>只存在你自己的手机浏览器里</small>')}
+ else if(m==='hark'){await loadHark();show(HARK,'<div style="font-size:48px">🤖</div>Hark 还没上新')}
  else if(m==='like'){const l=BUILTIN.filter(x=>likes[x.id]);show(l,'<div style="font-size:48px">🤍</div>还没有喜欢的<br>双击画面就能点赞')}}
 document.querySelectorAll('.top span').forEach(s=>s.onclick=()=>go(s.dataset.t));
 const bars=['bHome','bRand','bLike','bAbout'];function act(id){bars.forEach(b=>document.getElementById(b).classList.toggle('act',b===id))}
@@ -124,7 +125,7 @@ document.getElementById('bLike').onclick=()=>{act('bLike');go('like')};
 document.getElementById('bAbout').onclick=()=>alert('滴音 · 表情包刷刷乐\n\nHark 推荐的视频排在最前面。你刷到好玩的抖音/TikTok，把链接发给 Hark，它就会加进来（标「你分享的」）；跟 Hark 说「推几个」或者每天定时，它也会往里加新的。\n\n上下滑动刷，双击点赞，💬写评论，⬇️保存。\n点 + 可以上传自己的视频/动图，只保存在你这台手机的浏览器里，不会上传到网上。\n\n素材：Tenor 跳舞鳄鱼梗；Sticker Maker 派大星表情包（作者 COW.COW W【C.C】）。仅供个人娱乐。');
 const file=document.getElementById('file');document.getElementById('bPlus').onclick=()=>file.click();
 file.onchange=async()=>{await dbp;if(!db){toast('浏览器不支持本地保存');return}const fs=[...file.files];for(const f of fs){if(f.size>80*1024*1024){toast('文件太大（>80MB）');continue}const t=prompt('给「'+f.name+'」写句文案：','我的作品 #滴音')||'#滴音';await new Promise(r=>{const tx=db.transaction('v','readwrite');tx.objectStore('v').put({id:'u'+Date.now()+Math.random().toString(36).slice(2,6),blob:f,type:f.type,t});tx.oncomplete=r})}file.value='';if(fs.length){toast('发布成功');go('mine')}};
-go('rec');
+go('hark');
 </script>
 </body>
 </html>
