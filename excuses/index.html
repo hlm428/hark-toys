@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>离谱借口生成器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      .x-app {
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+        min-height: calc(100dvh - 120px);
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding-top: 8px;
+      }
+      .x-title { margin: 0; font: var(--type-display); letter-spacing: -0.01em; }
+      .x-sub { margin: 4px 0 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-label {
+        display: flex; justify-content: space-between; align-items: baseline;
+        margin: 0 0 8px; font: var(--type-label); color: var(--text-secondary);
+      }
+      .x-label b { font-weight: var(--weight-medium); color: var(--text-primary); }
+      .x-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-chip, .x-level, .x-ghost {
+        -webkit-tap-highlight-color: transparent;
+        cursor: pointer;
+        border: 1px solid var(--stroke-primary);
+        background: var(--fill-primary-on);
+        color: var(--text-primary);
+        transition: background var(--dur-quick) ease, color var(--dur-quick) ease, transform var(--dur-quick) var(--ease-out);
+      }
+      .x-chip {
+        min-height: var(--tap);
+        padding: 0 14px;
+        border-radius: var(--r-pill);
+        font: var(--type-label);
+      }
+      .x-chip[aria-pressed="true"], .x-level[aria-pressed="true"] {
+        background: var(--fill-primary);
+        color: var(--text-primary-on);
+        border-color: var(--fill-primary);
+      }
+      .x-chip:active, .x-level:active, .x-ghost:active { transform: scale(0.96); }
+      .x-range {
+        width: 100%;
+        height: var(--tap);
+        margin: 0;
+        accent-color: var(--fill-primary);
+      }
+      .x-levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .x-level {
+        min-height: var(--tap);
+        border-radius: var(--r-s);
+        font: var(--type-label);
+      }
+      .x-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 230px;
+        padding: 22px;
+        border-radius: var(--r-xl);
+        background: var(--fill-tertiary);
+        overflow: hidden;
+      }
+      .x-card__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+      .x-excuse {
+        flex: 1;
+        margin: 0;
+        font: var(--weight-medium) 22px/1.45 var(--sans);
+        text-wrap: pretty;
+      }
+      .x-excuse.is-empty { color: var(--text-secondary); font-weight: var(--weight-regular); }
+      .x-card.is-spinning .x-excuse { filter: blur(1.5px); opacity: 0.55; }
+      .x-card.is-pop .x-excuse { animation: x-pop 420ms var(--ease-out); }
+      @keyframes x-pop {
+        0% { transform: translateY(10px) scale(0.97); opacity: 0; }
+        100% { transform: none; opacity: 1; }
+      }
+      .x-meta { border-top: 1px solid var(--stroke-primary); padding-top: 12px; display: grid; gap: 4px; }
+      .x-cred { margin: 0; font: var(--type-body-strong); }
+      .x-cred span { font-family: "Geist Mono", monospace; font-weight: var(--weight-regular); }
+      .x-comment { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-go {
+        -webkit-tap-highlight-color: transparent;
+        width: 100%;
+        min-height: 64px;
+        border: 0;
+        border-radius: var(--r-pill);
+        background: var(--fill-primary);
+        color: var(--text-primary-on);
+        font: var(--weight-bold) 20px/1 var(--sans);
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        box-shadow: var(--hark-shadow);
+        transition: transform var(--dur-quick) var(--ease-out), opacity var(--dur-quick) ease;
+      }
+      .x-go:active { transform: scale(0.97); }
+      .x-go:disabled { opacity: 0.7; cursor: wait; }
+      .x-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: -6px; }
+      .x-ghost {
+        min-height: 48px;
+        border-radius: var(--r-m);
+        font: var(--type-body-strong);
+      }
+      .x-ghost:disabled { opacity: 0.45; cursor: default; }
+      .x-count { margin: 0; text-align: center; font: var(--type-caption); color: var(--text-secondary); }
+      .x-count b { font-family: "Geist Mono", monospace; font-weight: var(--weight-regular); color: var(--text-primary); }
+      .x-toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 28px);
+        transform: translate(-50%, 16px);
+        padding: 12px 18px;
+        border-radius: var(--r-pill);
+        background: var(--fill-primary);
+        color: var(--text-primary-on);
+        font: var(--type-label);
+        box-shadow: var(--hark-shadow);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--dur-quick) ease, transform 300ms var(--ease-out);
+        z-index: 30;
+        white-space: nowrap;
+      }
+      .x-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+      .x-foot { justify-content: center; text-align: center; }
+      @media (prefers-reduced-motion: reduce) {
+        .x-card.is-pop .x-excuse { animation: none; }
+        .x-chip, .x-level, .x-ghost, .x-go, .x-toast { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-app">
+          <header>
+            <h1 class="x-title">离谱借口生成器 🙃</h1>
+            <p class="x-sub">选场景，调离谱度，一键编好借口。</p>
+          </header>
+
+          <section aria-labelledby="scene-label">
+            <p class="x-label" id="scene-label">场景</p>
+            <div class="x-chips" id="scenes" role="group" aria-labelledby="scene-label"></div>
+          </section>
+
+          <section aria-labelledby="level-label">
+            <p class="x-label" id="level-label">离谱程度 <b id="level-name">有点离谱</b></p>
+            <input class="x-range" id="level" type="range" min="0" max="2" step="1" value="1" aria-labelledby="level-label" aria-valuetext="有点离谱" />
+            <div class="x-levels" id="levels"></div>
+          </section>
+
+          <div class="x-card" id="card" aria-live="polite">
+            <div class="x-card__top">
+              <span class="chip" id="tag">还没开编</span>
+            </div>
+            <p class="x-excuse is-empty" id="excuse">选好场景，点下面的大按钮 👇</p>
+            <div class="x-meta" id="meta" hidden>
+              <p class="x-cred">可信度：<span id="cred">--</span></p>
+              <p class="x-comment" id="comment"></p>
+            </div>
+          </div>
+
+          <button class="x-go" id="go" type="button">生成借口</button>
+          <div class="x-row">
+            <button class="x-ghost" id="again" type="button" disabled>换一个</button>
+            <button class="x-ghost" id="copy" type="button" disabled>复制</button>
+          </div>
+          <p class="x-count">今日已编了 <b id="count">0</b> 个借口</p>
+        </div>
+      </main>
+      <footer class="foot x-foot">
+        <p>仅供娱乐，真要请假还是说实话哦 😅</p>
+      </footer>
+    </div>
+    <div class="x-toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script>
+      (function () {
+        var SCENES = [
+          { id: "all", name: "全部" },
+          { id: "work", name: "不想上班/上课", openers: ["领导，今天实在来不了了，", "老师，跟您请个假，", "今天上班恐怕要缺席了，", "老板早上好，今天我可能到不了岗，", "老师抱歉，今天的课我得请假，", "今天恐怕没法打卡了，", "跟大家说一声，今天我请假一天，", "早！先说坏消息：今天我来不了，", "今天工位可能要空着了，", "很抱歉临时请假，", "今天的早会我参加不了了，", "实在不好意思，今天得请一天假，", "主管您好，今天情况特殊，", "老师好，今天我需要请个假，", "今天的早读我可能要缺席了，"] },
+          { id: "party", name: "不想出门聚会", openers: ["不好意思今天去不了了，", "今晚的局我可能要鸽了，", "姐妹们，今天我真出不了门，", "饭局我先缺席一下，", "抱歉，今天聚会我来不了，", "本来超想去的，可惜", "这次局我得请个假，", "临时有变，今天出不了门了，", "刚准备换衣服出门，结果", "大家先吃别等我，", "今天这顿我只能精神上参加了，", "对不起要放大家鸽子了，", "唱K我去不成了，", "兄弟们，今天约的我得改期，", "出门计划临时取消，"] },
+          { id: "msg", name: "没回消息", openers: ["抱歉刚看到消息！", "不好意思回晚了，", "刚才没回是因为", "对不起消息现在才回，", "不是故意不回你的，", "刚刚失联了一会儿，", "消息我看到了但没来得及回，", "久等了！刚才", "我不是已读不回，", "我才刚摸到手机，", "错过你的消息真的很抱歉，", "解释一下刚才为啥没回：", "我没有消失，", "看到消息的时候已经很晚了，", "回复迟到了，原因是"] },
+          { id: "late", name: "迟到了", openers: ["对不起我迟到了，", "我马上到，再等我十分钟，", "路上耽误了一下，", "抱歉让你久等了，", "我可能要晚到半小时，", "迟到了实在抱歉，", "我已经在路上了，只是", "晚到的原因是这样的：", "先道个歉，我会晚一点，", "不好意思没准时到，", "我出门比较晚，因为", "别生气，我迟到是有原因的：", "对不起又迟到了，", "我会晚一会儿，", "早到计划失败了，"] },
+          { id: "task", name: "作业/任务没交", openers: ["老师，作业我还没交，", "抱歉任务没能按时提交，", "截止时间我错过了，", "报告还差一点没完成，", "领导，方案今天交不上了，", "作业可能要晚交一天，", "实在抱歉DDL没赶上，", "这次的任务我需要延期一下，", "作业其实写了一半，但是", "材料没交的原因是这样的：", "PPT还没做完，", "老师，能不能宽限一天，", "进度落后了，", "文档还没发出来，", "我知道已经过截止时间了，"] },
+          { id: "game", name: "不想打游戏开黑", openers: ["今晚开黑我就不上了，", "兄弟们今天不打了，", "这把我先不来了，", "今天上不了号，", "排位我先不组了，", "队友们抱歉，今晚缺席，", "今天的手感留给明天，", "开黑先鸽一次，", "今晚峡谷没有我了，", "今天不上线了，", "车队别等我，", "这局我就不进了，", "今晚语音我不进了，", "今天先下了，", "本来要上号的，但是"] }
+        ];
+
+        var LEVELS = [
+          {
+            name: "正经",
+            reasons: ["突然有点发烧", "家里水管漏水在等师傅", "导师临时叫我改材料", "肠胃不太舒服", "家里来了亲戚要招待", "临时被叫去加班", "嗓子发炎说话都疼", "要带家里老人去医院复查", "有个快递要本人签收，一直在等", "昨晚没睡好，头特别疼", "家里突然停电，在等电工", "要陪朋友处理一点急事", "手机坏了刚拿去修", "地铁临时故障停运了", "物业通知要入户检修", "钥匙锁在屋里了，在等开锁师傅", "感冒了怕传染给大家"],
+            endings: ["下次我请你！", "改天补上。", "真的很抱歉。", "给大家添麻烦了。", "我尽快处理好。", "明天一定准时。", "辛苦帮我说一声。", "等我好了第一时间联系你。", "有事随时找我。", "谢谢理解！", "回头当面跟你道歉。", "下周一定到。", "我会把进度补回来的。", "感谢包容！", "麻烦你多担待。"],
+            cred: [72, 97],
+            comments: ["听起来很合理，放心发吧。", "建议语气诚恳一点。", "标准请假模板，稳。", "这条连你自己都能骗过。", "适合发给老板或老师。", "语气平稳，可信度拉满。", "朴实无华，但很好用。"]
+          },
+          {
+            name: "有点离谱",
+            reasons: ["我家猫把我手机藏起来了，刚找到", "楼下在拍戏把路封了", "外卖小哥送错了，我在等他把我的命运送回来", "我家狗学会了开门，跑出去了我在追", "电梯里遇到邻居，聊了一个小时", "我的闹钟自己放假了", "楼下大爷下象棋让我当裁判，走不开", "我在路上帮一只迷路的鸭子找妈妈", "洗衣机甩干的时候自己走出了卫生间", "我的拖鞋各自离家出走了一只", "刚剪的头发太丑了，需要冷静一下", "被小区的大鹅拦住要过路费", "泡面泡了三次都没泡对", "外卖备注写错，送来了五个人的饭，我得吃完", "我家绿萝今天情绪不太好，需要陪伴", "被奶奶拉去跳广场舞当领舞"],
+            endings: ["这事说来话长，下次细聊。", "我也很无奈。", "请相信我，虽然我自己都不太信。", "改天给你看照片（如果它同意的话）。", "这种事一年也就发生一次。", "求放过！", "我已经在努力解决了。", "你别笑，是真的。", "回头请你喝奶茶压压惊。", "生活就是这么出其不意。", "我也是第一次遇到。", "事后我会写一份情况说明。", "请给我一点点时间。", "真的不是编的（大概）。", "保证没有下次（大概也有）。"],
+            cred: [18, 49],
+            comments: ["建议配合真诚的眼神使用。", "对方可能会笑，但不会生气。", "适合发给好朋友。", "加个表情包更有说服力。", "半信半疑，效果看人品。", "建议附一张模糊的照片作为证据。", "离谱得刚刚好，有画面感。"]
+          },
+          {
+            name: "离谱到家",
+            reasons: ["我被选中参加蚂蚁搬家志愿者活动，今天是最后一天", "我的影子请了病假，我一个人出门不太合规", "王者峡谷里的小兵跟我借了充电宝还没还", "我刚发现自己是平行宇宙的备用版本，正版今天在用身体", "水逆，而且是光速水逆", "月亮今天离地球太近，我的潮汐不太稳定", "我家冰箱觉醒了自我意识，正在跟我谈判", "外星人借了我的Wi-Fi，正在下载地球说明书", "我昨晚梦见欠了周公一顿饭，今天得去还", "我的灵魂还在加载，进度卡在99%", "云朵跟我约好今天要排练下雨", "我被一只鸽子任命为城市巡逻队长，正在交接", "时间线出了bug，我被卡在了昨天", "我的发际线在开会讨论要不要撤退，我得旁听", "地心引力今天对我格外热情，起不来床", "我养的仙人掌要参加选秀，我得陪它去海选"],
+            endings: ["宇宙的安排，我也没办法。", "此事已上报银河系总部。", "等平行宇宙同步完成我就来。", "请勿外传，这是机密。", "我已经尽力维护世界和平了。", "如有疑问，请咨询我的影子。", "相关证据已被外星人带走。", "这是命运的伏笔，以后你就懂了。", "预计恢复时间：下个世纪。", "感谢理解，地球因你而美好。", "请保持冷静，这很科学。", "说完我自己都信了。", "我的律师是一只猫，有问题找它。", "别问，问就是玄学。", "此借口已获宇宙官方认证。"],
+            cred: [-40, 8],
+            comments: ["建议配合真诚的眼神使用。", "对方大概率会截图发朋友圈。", "建议配合真诚的眼神和一杯奶茶使用。", "可信度已跌破地心。", "发出去之后建议立刻关机。", "这已经不是借口，是文学作品。", "成功率取决于对方的想象力。", "仅推荐发给心大的朋友。"]
+          }
+        ];
+
+        var state = { scene: "all", level: 1, text: "", last: "", count: 0, busy: false };
+        var $ = function (id) { return document.getElementById(id); };
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var pick = function (arr) { return arr[Math.floor(Math.random() * arr.length)]; };
+        var rand = function (a, b) { return a + Math.floor(Math.random() * (b - a + 1)); };
+
+        // Scenario chips
+        var scenesBox = $("scenes");
+        SCENES.forEach(function (s) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "x-chip";
+          b.textContent = s.name;
+          b.setAttribute("aria-pressed", s.id === state.scene ? "true" : "false");
+          b.addEventListener("click", function () {
+            state.scene = s.id;
+            Array.prototype.forEach.call(scenesBox.children, function (c) { c.setAttribute("aria-pressed", "false"); });
+            b.setAttribute("aria-pressed", "true");
+          });
+          scenesBox.appendChild(b);
+        });
+
+        // Absurdity level
+        var range = $("level"), levelsBox = $("levels");
+        function setLevel(i) {
+          state.level = i;
+          range.value = i;
+          range.setAttribute("aria-valuetext", LEVELS[i].name);
+          $("level-name").textContent = LEVELS[i].name;
+          Array.prototype.forEach.call(levelsBox.children, function (c, j) { c.setAttribute("aria-pressed", j === i ? "true" : "false"); });
+        }
+        LEVELS.forEach(function (l, i) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "x-level";
+          b.textContent = l.name;
+          b.addEventListener("click", function () { setLevel(i); });
+          levelsBox.appendChild(b);
+        });
+        range.addEventListener("input", function () { setLevel(+range.value); });
+        setLevel(1);
+
+        function compose() {
+          var scene = state.scene === "all" ? pick(SCENES.slice(1)) : SCENES.filter(function (s) { return s.id === state.scene; })[0];
+          var lv = LEVELS[state.level];
+          var text = pick(scene.openers) + pick(lv.reasons) + "，" + pick(lv.endings);
+          return { scene: scene, text: text };
+        }
+
+        var card = $("card"), excuse = $("excuse");
+
+        function generate() {
+          if (state.busy) return;
+          state.busy = true;
+          $("go").disabled = true;
+          $("again").disabled = true;
+          var result, tries = 0;
+          do { result = compose(); tries++; } while (result.text === state.last && tries < 10);
+
+          function finish() {
+            var lv = LEVELS[state.level];
+            card.classList.remove("is-spinning");
+            card.classList.remove("is-pop");
+            void card.offsetWidth;
+            card.classList.add("is-pop");
+            excuse.classList.remove("is-empty");
+            excuse.textContent = result.text;
+            $("tag").textContent = result.scene.name + " · " + lv.name;
+            $("cred").textContent = rand(lv.cred[0], lv.cred[1]) + "%";
+            $("comment").textContent = pick(lv.comments);
+            $("meta").hidden = false;
+            state.text = result.text;
+            state.last = result.text;
+            state.count++;
+            $("count").textContent = state.count;
+            $("copy").disabled = false;
+            $("again").disabled = false;
+            $("go").disabled = false;
+            state.busy = false;
+          }
+
+          if (reduce) { finish(); return; }
+          card.classList.add("is-spinning");
+          excuse.classList.remove("is-empty");
+          var start = Date.now();
+          var timer = setInterval(function () {
+            excuse.textContent = compose().text;
+            $("cred").textContent = rand(-99, 99) + "%";
+            if (Date.now() - start >= 500) { clearInterval(timer); finish(); }
+          }, 60);
+        }
+
+        $("go").addEventListener("click", generate);
+        $("again").addEventListener("click", generate);
+
+        // Copy with fallback
+        var toastTimer;
+        function toast(msg) {
+          var t = $("toast");
+          t.textContent = msg;
+          t.classList.add("is-on");
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(function () { t.classList.remove("is-on"); }, 1800);
+        }
+        function fallbackCopy(text) {
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "");
+          ta.style.position = "fixed";
+          ta.style.top = "0";
+          ta.style.left = "-9999px";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          ta.setSelectionRange(0, text.length);
+          var ok = false;
+          try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+          document.body.removeChild(ta);
+          return ok;
+        }
+        $("copy").addEventListener("click", function () {
+          var text = state.text;
+          if (!text) return;
+          var done = function () { toast("已复制，祝你好运"); };
+          var fail = function () { toast(fallbackCopy(text) ? "已复制，祝你好运" : "复制失败，长按文字手动复制吧"); };
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(done, fail);
+          } else {
+            fail();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
