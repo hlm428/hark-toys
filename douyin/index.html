@@ -69,9 +69,11 @@ const BUILTIN=[
 const PT=['今天也是什么都不想干的一天','我的脑子在度假','听我说谢谢你','这个世界需要我','冲啊！','不想上班','我好可爱','累了，毁灭吧','嘿嘿嘿','派大星的日常','发呆中，勿扰','你说啥？','开心到转圈圈','睡了睡了','好饿','我是天才','emo中','惊！','比心','快夸我','放空','跳舞时间','溜了溜了','晚安','明天再说'];
 for(let i=1;i<=25;i++){const n=String(i).padStart(2,'0');BUILTIN.push({id:'p'+n,src:'media/p'+n+'.gif',u:'派大星',a:'⭐',t:PT[i-1]+' #派大星',p:1})}
 BUILTIN.sort(()=>Math.random()-.5);
+let HARK=[];
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
 let likes=LS.get('dy_likes',{}),comments=LS.get('dy_comments',{});
-const BASE={};BUILTIN.forEach(x=>BASE[x.id]=Math.floor(Math.random()*90000)+1000);
+const BASE={};function seed(id){let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%90000;return h+1000}BUILTIN.forEach(x=>BASE[x.id]=seed(x.id));
+async function loadHark(){try{const r=await fetch('feed.json?t='+Date.now());const j=await r.json();HARK=(j.items||[]).slice().reverse().map(x=>({...x,a:x.a||'🤖',u:x.u||'Hark',t:x.t||'',hark:1}));HARK.forEach(x=>BASE[x.id]=seed(x.id))}catch(e){HARK=[]}}
 const feed=document.getElementById('feed');let mode='rec',cur=null;
 // IndexedDB for own uploads
 let db;const dbp=new Promise(r=>{const q=indexedDB.open('diyin',1);q.onupgradeneeded=()=>q.result.createObjectStore('v',{keyPath:'id'});q.onsuccess=()=>{db=q.result;r()};q.onerror=()=>r()});
@@ -80,7 +82,7 @@ function fmt(n){return n>=10000?(n/10000).toFixed(1)+'w':n}
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',1500)}
 function card(x){
  const d=document.createElement('div');d.className='item'+(x.p?' p':'');d.dataset.id=x.id;
- const isV=x.type&&x.type.startsWith('video');
+ const isV=x.type&&x.type.startsWith('video');const tag=x.hark?`<span style="background:#fe2c55;border-radius:4px;padding:1px 6px;font-size:12px;margin-right:6px">${x.from==='你'?'你分享的':'Hark 推荐'}</span>${x.date?`<small style="opacity:.7">${x.date}</small>`:''}<br>`:'';
  d.innerHTML=`<div class="bg" style="${x.p?'':`background-image:url('${x.src}')`}"></div>
  ${isV?`<video class="media" src="${x.src}" loop playsinline muted></video>`:`<img class="media" src="${x.src}" loading="lazy" alt="">`}
  <div class="side"><div class="avatar">${x.a||'😎'}</div>
@@ -88,12 +90,12 @@ function card(x){
  <div class="btn cm"><b>💬</b><span>${(comments[x.id]||[]).length}</span></div>
  <div class="btn dl"><b>⬇️</b><span>保存</span></div>
  <div class="btn sh"><b>↗️</b><span>分享</span></div></div>
- <div class="cap"><h3>@${x.u}</h3><p>${x.t}</p></div>${x.own?'<div class="del">删除</div>':''}`;
+ <div class="cap"><h3>@${x.u}</h3><p>${tag}${x.t}</p></div>${x.own?'<div class="del">删除</div>':''}`;
  let last=0;d.addEventListener('click',e=>{if(e.target.closest('.side,.del'))return;const now=Date.now();if(now-last<300){like(x,d,true,e)}else{const v=d.querySelector('video');if(v){setTimeout(()=>{if(Date.now()-last>=300){v.paused?v.play():v.pause()}},310)}}last=now});
  d.querySelector('.lk').onclick=()=>like(x,d,false);
  d.querySelector('.cm').onclick=()=>openC(x,d);
  d.querySelector('.dl').onclick=()=>{const a=document.createElement('a');a.href=x.src;a.download=(x.u||'diyin')+(isV?'.mp4':'.gif');document.body.appendChild(a);a.click();a.remove();toast('开始下载（微信里请长按图片保存）')};
- d.querySelector('.sh').onclick=async()=>{const url=x.own?location.href:new URL(x.src,location.href).href;try{if(navigator.share){await navigator.share({title:'滴音',url})}else{await navigator.clipboard.writeText(url);toast('链接已复制')}}catch(e){}};
+ d.querySelector('.sh').onclick=async()=>{const url=x.link||(x.own?location.href:new URL(x.src,location.href).href);try{if(navigator.share){await navigator.share({title:'滴音',url})}else{await navigator.clipboard.writeText(url);toast('链接已复制')}}catch(e){}};
  if(x.own)d.querySelector('.del').onclick=()=>{if(confirm('删除这条？')){db.transaction('v','readwrite').objectStore('v').delete(x.id);d.remove();toast('已删除')}};
  return d}
 function like(x,d,dbl,e){
@@ -110,15 +112,16 @@ mask.onclick=closeC;document.getElementById('cclose').onclick=closeC;
 const io=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target.querySelector('video');if(v){e.isIntersecting?v.play().catch(()=>{}):v.pause()}}),{threshold:.6});
 async function show(list,emptyMsg){feed.innerHTML='';feed.scrollTop=0;if(!list.length){feed.innerHTML=`<div class="empty">${emptyMsg}</div>`;return}list.forEach(x=>{const c=card(x);feed.appendChild(c);io.observe(c)})}
 async function go(m){mode=m;document.querySelectorAll('.top span').forEach(s=>s.classList.toggle('act',s.dataset.t===m));
- if(m==='rec')show(BUILTIN);
+ if(m==='rec'){await loadHark();show([...HARK,...BUILTIN])}
  else if(m==='mine'){await dbp;const l=(await mine()).map(v=>({...v,src:URL.createObjectURL(v.blob),u:'我',a:'😎',own:1}));show(l,'<div style="font-size:48px">📱</div>还没有上传<br>点底部 <b>+</b> 选手机里的视频或动图<br><small>只存在你自己的手机浏览器里</small>')}
  else if(m==='like'){const l=BUILTIN.filter(x=>likes[x.id]);show(l,'<div style="font-size:48px">🤍</div>还没有喜欢的<br>双击画面就能点赞')}}
 document.querySelectorAll('.top span').forEach(s=>s.onclick=()=>go(s.dataset.t));
 const bars=['bHome','bRand','bLike','bAbout'];function act(id){bars.forEach(b=>document.getElementById(b).classList.toggle('act',b===id))}
 document.getElementById('bHome').onclick=()=>{act('bHome');go('rec')};
-document.getElementById('bRand').onclick=()=>{act('bRand');BUILTIN.sort(()=>Math.random()-.5);go('rec');toast('重新洗牌')};
+document.getElementById('bRand').onclick=()=>{act('bRand');BUILTIN.sort(()=>Math.random()-.5);
+let HARK=[];go('rec');toast('重新洗牌')};
 document.getElementById('bLike').onclick=()=>{act('bLike');go('like')};
-document.getElementById('bAbout').onclick=()=>alert('滴音 · 表情包刷刷乐\n\n上下滑动刷表情包，双击点赞，💬写评论，⬇️保存。\n点 + 可以上传自己的视频/动图，只保存在你这台手机的浏览器里，不会上传到网上。\n\n素材：Tenor 跳舞鳄鱼梗；Sticker Maker 派大星表情包（作者 COW.COW W【C.C】）。仅供个人娱乐。');
+document.getElementById('bAbout').onclick=()=>alert('滴音 · 表情包刷刷乐\n\nHark 推荐的视频排在最前面。你刷到好玩的抖音/TikTok，把链接发给 Hark，它就会加进来（标「你分享的」）；跟 Hark 说「推几个」或者每天定时，它也会往里加新的。\n\n上下滑动刷，双击点赞，💬写评论，⬇️保存。\n点 + 可以上传自己的视频/动图，只保存在你这台手机的浏览器里，不会上传到网上。\n\n素材：Tenor 跳舞鳄鱼梗；Sticker Maker 派大星表情包（作者 COW.COW W【C.C】）。仅供个人娱乐。');
 const file=document.getElementById('file');document.getElementById('bPlus').onclick=()=>file.click();
 file.onchange=async()=>{await dbp;if(!db){toast('浏览器不支持本地保存');return}const fs=[...file.files];for(const f of fs){if(f.size>80*1024*1024){toast('文件太大（>80MB）');continue}const t=prompt('给「'+f.name+'」写句文案：','我的作品 #滴音')||'#滴音';await new Promise(r=>{const tx=db.transaction('v','readwrite');tx.objectStore('v').put({id:'u'+Date.now()+Math.random().toString(36).slice(2,6),blob:f,type:f.type,t});tx.oncomplete=r})}file.value='';if(fs.length){toast('发布成功');go('mine')}};
 go('rec');
