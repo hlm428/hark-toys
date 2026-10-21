@@ -47,12 +47,33 @@ video.media{width:92%}
 .toast{position:fixed;top:45%;left:50%;transform:translate(-50%,-50%);background:#000c;padding:10px 18px;border-radius:8px;z-index:20;font-size:14px;display:none}
 .empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:.8;text-align:center;padding:30px}
 .del{position:absolute;top:70px;right:14px;z-index:4;background:#0008;border-radius:14px;padding:4px 10px;font-size:13px;cursor:pointer}
+.page{position:fixed;inset:0 0 54px 0;background:#111;z-index:6;overflow-y:auto;display:none;padding:20px 16px}
+.page.open{display:block}
+.big{background:#fe2c55;color:#fff;border:0;border-radius:12px;padding:14px;font-size:17px;line-height:1.5;text-align:left}
+.big.g{background:#2a2a2a}.big small{opacity:.8;font-size:13px}
+.modal{position:fixed;inset:0;background:#000c;z-index:30;display:none;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.mbox{background:#1c1c1c;border-radius:16px;padding:22px;width:86%;max-width:360px;display:flex;flex-direction:column;gap:14px}
+.mbox h3{text-align:center}
+#avs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+#avs span{font-size:30px;padding:6px;border-radius:12px;cursor:pointer;border:2px solid transparent}
+#avs span.on{border-color:#fe2c55;background:#333}
+.mbox input{background:#2a2a2a;border:0;border-radius:10px;padding:12px;color:#fff;font-size:16px;outline:none}
+.me-head{display:flex;align-items:center;gap:16px;margin:10px 0 18px}
+.me-av{width:76px;height:76px;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center;font-size:42px}
+.stats{display:flex;gap:26px;margin:4px 0 18px}.stats b{font-size:18px;display:block}.stats span{font-size:13px;opacity:.7}
+.msg{background:#1c1c1c;border-radius:12px;padding:12px 14px;margin:10px 0;font-size:15px;line-height:1.5}
+.msg small{display:block;opacity:.6;font-size:12px;margin-bottom:4px}
+.hl{display:inline-block;background:#fe2c55;border-radius:4px;padding:1px 6px;font-size:12px;margin:0 4px 0 0}
 </style>
 </head>
 <body>
-<div class="top"><span data-t="mine">我的上传</span><span data-t="rec">推荐</span><span data-t="hark">Hark发的</span></div>
+<div class="top"><span data-t="hark">Hark发的</span><span data-t="rec">推荐</span><span data-t="you">你发的</span></div>
 <div id="feed"></div>
-<div class="bar"><span class="act" id="bHome">首页</span><span id="bRand">随机</span><div class="plus" id="bPlus">+</div><span id="bLike">喜欢</span><span id="bAbout">说明</span></div>
+<div class="bar"><span class="act" id="bHome">首页</span><span id="bMsg">消息<i id="dot" style="display:none;background:#fe2c55;border-radius:50%;width:8px;height:8px;display:inline-block;margin-left:2px;vertical-align:top"></i></span><div class="plus" id="bPlus">+</div><span id="bLike">喜欢</span><span id="bMe">我</span></div>
+<div class="page" id="page"></div>
+<div class="sheet" id="act" style="height:auto"><h4>发布<i id="aclose">✕</i></h4><div style="padding:14px;display:flex;flex-direction:column;gap:12px"><button class="big" id="toHark">📮 发给 Hark<br><small>同步到网上，Hark 能看、能点赞评论</small></button><button class="big g" id="toLocal">📱 只存我手机里<br><small>不上传，只有你自己能看</small></button></div></div>
+<div class="modal" id="prof"><div class="mbox"><h3>创建你的滴音号</h3><div id="avs"></div><input id="pname" placeholder="起个昵称" maxlength="16"><button class="big" id="psave">完成</button></div></div>
 <input type="file" id="file" accept="image/*,video/*" multiple hidden>
 <div class="mask" id="mask"></div>
 <div class="sheet" id="sheet"><h4><span id="ctitle">评论</span><i id="cclose">✕</i></h4><div class="clist" id="clist"></div><div class="cin"><input id="cinput" placeholder="说点什么…" maxlength="100"><button id="csend">发送</button></div></div>
@@ -69,11 +90,15 @@ const BUILTIN=[
 const PT=['今天也是什么都不想干的一天','我的脑子在度假','听我说谢谢你','这个世界需要我','冲啊！','不想上班','我好可爱','累了，毁灭吧','嘿嘿嘿','派大星的日常','发呆中，勿扰','你说啥？','开心到转圈圈','睡了睡了','好饿','我是天才','emo中','惊！','比心','快夸我','放空','跳舞时间','溜了溜了','晚安','明天再说'];
 for(let i=1;i<=25;i++){const n=String(i).padStart(2,'0');BUILTIN.push({id:'p'+n,src:'media/p'+n+'.gif',u:'派大星',a:'⭐',t:PT[i-1]+' #派大星',p:1})}
 BUILTIN.sort(()=>Math.random()-.5);
-let HARK=[];
+let HARK=[],YOU=[],FEED={};
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))};
 let likes=LS.get('dy_likes',{}),comments=LS.get('dy_comments',{});
 const BASE={};function seed(id){let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%90000;return h+1000}BUILTIN.forEach(x=>BASE[x.id]=seed(x.id));
-async function loadHark(){try{const r=await fetch('feed.json?t='+Date.now());const j=await r.json();HARK=(j.items||[]).slice().reverse().map(x=>({...x,a:x.a||'🤖',u:x.u||'Hark',t:x.t||'',hark:1}));HARK.forEach(x=>BASE[x.id]=seed(x.id))}catch(e){HARK=[]}}
+async function loadHark(){try{const r=await fetch('feed.json?t='+Date.now());FEED=await r.json();const all=(FEED.items||[]).slice().reverse().map(x=>({...x,a:x.from==='你'?prof().avatar:(x.a||'🤖'),u:x.from==='你'?prof().name:(x.u||'Hark'),t:x.t||'',hark:1}));HARK=all.filter(x=>x.from!=='你');YOU=all.filter(x=>x.from==='你');all.forEach(x=>BASE[x.id]=seed(x.id));const ms=FEED.messages||[];const seen=LS.get('dy_seen',0);document.getElementById('dot').style.display=ms.length>seen?'inline-block':'none'}catch(e){HARK=[];YOU=[]}}
+function prof(){return LS.get('dy_profile',null)||{name:'我',avatar:'😎'}}
+function synced(id){const it=(FEED.items||[]).find(x=>x.id===id);return {like:it?it.hark_like:(FEED.likes_map||{})[id],cm:(it?it.comments:(FEED.comments_map||{})[id])||[]}}
+const REPO='https://github.com/hlm428/hark-toys/issues/new';
+function issue(title,body){location.href=REPO+'?labels=diyin&title='+encodeURIComponent(title)+'&body='+encodeURIComponent(body)}
 const feed=document.getElementById('feed');let mode='rec',cur=null;
 // IndexedDB for own uploads
 let db;const dbp=new Promise(r=>{const q=indexedDB.open('diyin',1);q.onupgradeneeded=()=>q.result.createObjectStore('v',{keyPath:'id'});q.onsuccess=()=>{db=q.result;r()};q.onerror=()=>r()});
@@ -82,12 +107,12 @@ function fmt(n){return n>=10000?(n/10000).toFixed(1)+'w':n}
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',1500)}
 function card(x){
  const d=document.createElement('div');d.className='item'+(x.p?' p':'');d.dataset.id=x.id;
- const isV=x.type&&x.type.startsWith('video');const tag=x.hark?`<span style="background:#fe2c55;border-radius:4px;padding:1px 6px;font-size:12px;margin-right:6px">${x.from==='你'?'你分享的':'Hark 推荐'}</span>${x.date?`<small style="opacity:.7">${x.date}</small>`:''}<br>`:'';
+ const isV=x.type&&x.type.startsWith('video');const sy=synced(x.id);const tag=(x.hark?`<span class="hl">${x.from==='你'?'你发的':'Hark 推荐'}</span>${x.date?`<small style="opacity:.7">${x.date}</small> `:''}`:'')+(sy.like?'<span class="hl" style="background:#fff;color:#fe2c55">❤️ Hark 赞了</span>':'')+((x.hark||sy.like)?'<br>':'');const ncm=sy.cm.length+(comments[x.id]||[]).filter(c=>!c.sent).length;
  d.innerHTML=`<div class="bg" style="${x.p?'':`background-image:url('${x.src}')`}"></div>
  ${isV?`<video class="media" src="${x.src}" loop playsinline muted></video>`:`<img class="media" src="${x.src}" loading="lazy" alt="">`}
  <div class="side"><div class="avatar">${x.a||'😎'}</div>
- <div class="btn lk"><b>${likes[x.id]?'❤️':'🤍'}</b><span>${fmt((BASE[x.id]||0)+(likes[x.id]?1:0))}</span></div>
- <div class="btn cm"><b>💬</b><span>${(comments[x.id]||[]).length}</span></div>
+ <div class="btn lk"><b>${likes[x.id]?'❤️':'🤍'}</b><span>${fmt((BASE[x.id]||0)+(likes[x.id]?1:0)+(sy.like?1:0))}</span></div>
+ <div class="btn cm"><b>💬</b><span>${ncm}</span></div>
  <div class="btn dl"><b>⬇️</b><span>保存</span></div>
  <div class="btn sh"><b>↗️</b><span>分享</span></div></div>
  <div class="cap"><h3>@${x.u}</h3><p>${tag}${x.t}</p></div>${x.own?'<div class="del">删除</div>':''}`;
@@ -105,26 +130,41 @@ function like(x,d,dbl,e){
 const sheet=document.getElementById('sheet'),mask=document.getElementById('mask');
 function openC(x,d){cur={x,d};render();sheet.classList.add('open');mask.classList.add('open')}
 function closeC(){sheet.classList.remove('open');mask.classList.remove('open')}
-function render(){const l=comments[cur.x.id]||[];document.getElementById('ctitle').textContent=l.length+' 条评论';document.getElementById('clist').innerHTML=l.length?l.map(c=>`<div class="c"><div class="a">🙂</div><div><small>我 · ${c.t}</small>${c.s.replace(/</g,'&lt;')}</div></div>`).join(''):'<p style="text-align:center;color:#777;margin-top:40px">还没有评论，来抢沙发</p>'}
-document.getElementById('csend').onclick=()=>{const i=document.getElementById('cinput');const s=i.value.trim();if(!s)return;(comments[cur.x.id]=comments[cur.x.id]||[]).push({s,t:new Date().toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})});LS.set('dy_comments',comments);i.value='';render();cur.d.querySelector('.cm span').textContent=comments[cur.x.id].length};
+function render(){const sy=synced(cur.x.id).cm.map(c=>({...c,syn:1}));const loc=(comments[cur.x.id]||[]).filter(c=>!c.sent||!sy.some(z=>z.s===c.s));const l=[...sy,...loc];document.getElementById('ctitle').textContent=l.length+' 条评论';document.getElementById('clist').innerHTML=l.length?l.map(c=>`<div class="c"><div class="a">${c.u==='Hark'?'🤖':prof().avatar}</div><div><small>${c.u==='Hark'?'Hark':prof().name} · ${c.t||''}${c.sent&&!c.syn?' · 已发给Hark，等同步':''}</small>${String(c.s).replace(/</g,'&lt;')}</div></div>`).join(''):'<p style="text-align:center;color:#777;margin-top:40px">还没有评论，来抢沙发</p>'}
+document.getElementById('csend').onclick=()=>{const i=document.getElementById('cinput');const s=i.value.trim();if(!s)return;(comments[cur.x.id]=comments[cur.x.id]||[]).push({s,t:new Date().toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})});LS.set('dy_comments',comments);i.value='';render();if(confirm('把这条评论也发给 Hark 看吗？\n（会跳到 GitHub，点 Submit 就发出去了）')){const arr=comments[cur.x.id];arr[arr.length-1].sent=1;LS.set('dy_comments',comments);issue('[滴音评论] '+cur.x.id,'昵称：'+prof().name+'\n视频：'+cur.x.id+'（'+(cur.x.t||'').slice(0,30)+'）\n评论：'+s+'\n\n（直接点 Submit new issue 发送即可）')}};
 document.getElementById('cinput').onkeydown=e=>{if(e.key==='Enter')document.getElementById('csend').click()};
 mask.onclick=closeC;document.getElementById('cclose').onclick=closeC;
 const io=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target.querySelector('video');if(v){e.isIntersecting?v.play().catch(()=>{}):v.pause()}}),{threshold:.6});
 async function show(list,emptyMsg){feed.innerHTML='';feed.scrollTop=0;if(!list.length){feed.innerHTML=`<div class="empty">${emptyMsg}</div>`;return}list.forEach(x=>{const c=card(x);feed.appendChild(c);io.observe(c)})}
-async function go(m){mode=m;document.querySelectorAll('.top span').forEach(s=>s.classList.toggle('act',s.dataset.t===m));
+async function go(m){mode=m;closePage();document.querySelectorAll('.top span').forEach(s=>s.classList.toggle('act',s.dataset.t===m));
  if(m==='rec'){await loadHark();show([...HARK,...BUILTIN])}
  else if(m==='mine'){await dbp;const l=(await mine()).map(v=>({...v,src:URL.createObjectURL(v.blob),u:'我',a:'😎',own:1}));show(l,'<div style="font-size:48px">📱</div>还没有上传<br>点底部 <b>+</b> 选手机里的视频或动图<br><small>只存在你自己的手机浏览器里</small>')}
+ else if(m==='you'){await loadHark();await dbp;const loc=(await mine()).map(v=>({...v,src:URL.createObjectURL(v.blob),u:prof().name,a:prof().avatar,own:1,t:v.t+' （只在手机里）'}));show([...YOU,...loc],'<div style="font-size:48px">📹</div>你还没发视频<br>点底部 <b>+</b> 发一个给 Hark 吧')}
  else if(m==='hark'){await loadHark();show(HARK,'<div style="font-size:48px">🤖</div>Hark 还没上新')}
  else if(m==='like'){const l=BUILTIN.filter(x=>likes[x.id]);show(l,'<div style="font-size:48px">🤍</div>还没有喜欢的<br>双击画面就能点赞')}}
 document.querySelectorAll('.top span').forEach(s=>s.onclick=()=>go(s.dataset.t));
-const bars=['bHome','bRand','bLike','bAbout'];function act(id){bars.forEach(b=>document.getElementById(b).classList.toggle('act',b===id))}
-document.getElementById('bHome').onclick=()=>{act('bHome');go('rec')};
-document.getElementById('bRand').onclick=()=>{act('bRand');BUILTIN.sort(()=>Math.random()-.5);
-let HARK=[];go('rec');toast('重新洗牌')};
+const bars=['bHome','bMsg','bLike','bMe'];function act(id){bars.forEach(b=>document.getElementById(b).classList.toggle('act',b===id))}
+const page=document.getElementById('page');function closePage(){page.classList.remove('open')}
+document.getElementById('bHome').onclick=()=>{act('bHome');go(mode==='like'?'hark':mode)};
 document.getElementById('bLike').onclick=()=>{act('bLike');go('like')};
-document.getElementById('bAbout').onclick=()=>alert('滴音 · 表情包刷刷乐\n\nHark 推荐的视频排在最前面。你刷到好玩的抖音/TikTok，把链接发给 Hark，它就会加进来（标「你分享的」）；跟 Hark 说「推几个」或者每天定时，它也会往里加新的。\n\n上下滑动刷，双击点赞，💬写评论，⬇️保存。\n点 + 可以上传自己的视频/动图，只保存在你这台手机的浏览器里，不会上传到网上。\n\n素材：Tenor 跳舞鳄鱼梗；Sticker Maker 派大星表情包（作者 COW.COW W【C.C】）。仅供个人娱乐。');
-const file=document.getElementById('file');document.getElementById('bPlus').onclick=()=>file.click();
-file.onchange=async()=>{await dbp;if(!db){toast('浏览器不支持本地保存');return}const fs=[...file.files];for(const f of fs){if(f.size>80*1024*1024){toast('文件太大（>80MB）');continue}const t=prompt('给「'+f.name+'」写句文案：','我的作品 #滴音')||'#滴音';await new Promise(r=>{const tx=db.transaction('v','readwrite');tx.objectStore('v').put({id:'u'+Date.now()+Math.random().toString(36).slice(2,6),blob:f,type:f.type,t});tx.oncomplete=r})}file.value='';if(fs.length){toast('发布成功');go('mine')}};
+document.getElementById('bMsg').onclick=async()=>{act('bMsg');await loadHark();const ms=(FEED.messages||[]).slice().reverse();LS.set('dy_seen',(FEED.messages||[]).length);document.getElementById('dot').style.display='none';
+ page.innerHTML='<h2 style="margin-bottom:6px">消息</h2><p style="opacity:.6;font-size:13px">Hark 每天早上 8 点上新，同时看你发的视频和评论，点赞回复。急的话在 Hark 聊天里说「同步滴音」。</p>'+(ms.length?ms.map(m=>`<div class="msg"><small>🤖 Hark · ${m.t||''}</small>${String(m.s).replace(/</g,'&lt;')}</div>`).join(''):'<div class="msg">还没有消息。发个视频或评论给 Hark 试试！</div>');page.classList.add('open')};
+document.getElementById('bMe').onclick=async()=>{act('bMe');await loadHark();await dbp;const p=prof();const loc=await mine();const got=YOU.filter(x=>x.hark_like).length;
+ page.innerHTML=`<div class="me-head"><div class="me-av">${p.avatar}</div><div><h2>${p.name.replace(/</g,'&lt;')}</h2><small style="opacity:.6">滴音号 · 和 Hark 互关中</small></div></div><div class="stats"><div><b>${YOU.length+loc.length}</b><span>作品</span></div><div><b>${got}</b><span>Hark 的赞</span></div><div><b>${Object.keys(likes).length}</b><span>喜欢</span></div></div><div style="display:flex;flex-direction:column;gap:10px"><button class="big g" id="edit">✏️ 改昵称和头像</button><button class="big g" id="myv">📹 看我的作品</button><button class="big g" id="help">❓ 怎么玩</button></div>`;page.classList.add('open');
+ document.getElementById('edit').onclick=openProf;document.getElementById('myv').onclick=()=>{act('bHome');go('you')};
+ document.getElementById('help').onclick=()=>alert('滴音怎么玩\n\n· 上下滑刷视频，双击点赞，💬评论\n· 点 + 选「发给 Hark」，会跳到 GitHub 页面，在框里选你的视频（10MB 以内），点 Submit new issue 就发出去了（要先登录你的 GitHub）\n· 评论也可以发给 Hark\n· Hark 每天早上 8 点上新 8 个视频，顺便看你发的东西，点赞、回复，回复在「消息」里\n· 急的话在 Hark 聊天里说「同步滴音」\n\n素材：Tenor；派大星表情包作者 COW.COW W【C.C】。仅供个人娱乐。')};
+const AV=['😎','🐊','⭐','🐱','🐶','🐰','🦊','🐼','🐸','🦄','🌸','👻'];let avPick='😎';
+function openProf(){const p=prof();avPick=p.avatar;document.getElementById('pname').value=p.name==='我'?'':p.name;document.getElementById('avs').innerHTML=AV.map(a=>`<span class="${a===avPick?'on':''}">${a}</span>`).join('');document.querySelectorAll('#avs span').forEach(e=>e.onclick=()=>{avPick=e.textContent;document.querySelectorAll('#avs span').forEach(z=>z.classList.toggle('on',z===e))});document.getElementById('prof').classList.add('open')}
+document.getElementById('psave').onclick=()=>{const n=document.getElementById('pname').value.trim();if(!n){toast('起个昵称吧');return}LS.set('dy_profile',{name:n,avatar:avPick});document.getElementById('prof').classList.remove('open');toast('欢迎你，'+n);if(page.classList.contains('open'))document.getElementById('bMe').click()};
+const actS=document.getElementById('act');
+document.getElementById('bPlus').onclick=()=>{actS.classList.add('open');mask.classList.add('open')};
+function closeAct(){actS.classList.remove('open');mask.classList.remove('open')}
+document.getElementById('aclose').onclick=closeAct;mask.addEventListener('click',closeAct);
+document.getElementById('toLocal').onclick=()=>{closeAct();file.click()};
+document.getElementById('toHark').onclick=()=>{closeAct();const t=prompt('给视频写句文案：','');if(t===null)return;issue('[滴音投稿] '+(t||'我的视频'),'昵称：'+prof().name+'\n文案：'+(t||'我的视频')+'\n\n👇 点下面这个框，再点「Paste, drop, or click to add files」选你的视频（10MB 以内），等上传完点 Submit new issue 就发给 Hark 啦\n\n')};
+const file=document.getElementById('file');
+file.onchange=async()=>{await dbp;if(!db){toast('浏览器不支持本地保存');return}const fs=[...file.files];for(const f of fs){if(f.size>80*1024*1024){toast('文件太大（>80MB）');continue}const t=prompt('给「'+f.name+'」写句文案：','我的作品 #滴音')||'#滴音';await new Promise(r=>{const tx=db.transaction('v','readwrite');tx.objectStore('v').put({id:'u'+Date.now()+Math.random().toString(36).slice(2,6),blob:f,type:f.type,t});tx.oncomplete=r})}file.value='';if(fs.length){toast('已保存到手机');go('you')}};
+if(!LS.get('dy_profile',null))openProf();
 go('hark');
 </script>
 </body>
