@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1230" />
+    <title>催睡觉神器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      :root {
+        --x-navy: #0b1230;
+        --x-navy-2: #141d45;
+        --x-moon: #f4e9c1;
+        --x-ink: #e9ecf8;
+        --x-ink-2: #a9b1d6;
+        --x-line: rgba(233, 236, 248, 0.14);
+        --x-surface: #18204a;
+      }
+      html, body { background: var(--x-navy); overflow-x: hidden; }
+      body {
+        color: var(--x-ink);
+        font-family: var(--sans), "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+        min-height: 100dvh;
+        background:
+          radial-gradient(120% 60% at 80% -10%, rgba(244, 233, 193, 0.16), transparent 60%),
+          linear-gradient(180deg, var(--x-navy-2) 0%, var(--x-navy) 70%);
+        background-attachment: fixed;
+      }
+      .x-app {
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100dvh;
+        padding: max(20px, env(safe-area-inset-top)) var(--gutter) max(20px, env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .x-top { position: relative; padding: 8px 0 4px; }
+      .x-moon {
+        position: absolute; right: 4px; top: 6px; width: 56px; height: 56px; border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #fffbe8, var(--x-moon) 60%, #d9c98f);
+        box-shadow: 0 0 40px 10px rgba(244, 233, 193, 0.28), 0 0 120px 30px rgba(244, 233, 193, 0.1);
+      }
+      .x-moon::after {
+        content: ""; position: absolute; width: 50px; height: 50px; border-radius: 50%;
+        right: -14px; top: -8px; background: var(--x-navy-2);
+      }
+      .x-clock {
+        font: var(--type-display);
+        font-size: clamp(56px, 18vw, 84px);
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        margin: 0;
+      }
+      .x-clock small { font-size: 0.4em; color: var(--x-ink-2); margin-left: 4px; }
+      .x-mood { font: var(--type-heading); margin: 10px 0 0; color: var(--x-moon); }
+      .x-date { font: var(--type-small); color: var(--x-ink-2); margin: 4px 0 0; }
+
+      .x-card {
+        background: var(--x-surface);
+        border: 1px solid var(--x-line);
+        border-radius: var(--r-l);
+        padding: 16px;
+      }
+      .x-label { font: var(--type-caption); color: var(--x-ink-2); margin: 0 0 6px; letter-spacing: 0.02em; }
+      .x-app, .x-app > * { min-width: 0; box-sizing: border-box; }
+      .x-app { width: 100%; }
+      .x-times { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+      .x-time { display: flex; flex-direction: column; gap: 6px; font: var(--type-small); color: var(--x-ink-2); min-width: 0; }
+      .x-time input {
+        min-width: 0;
+        box-sizing: border-box;
+        font-size: 20px;
+        font: var(--type-title);
+        font-variant-numeric: tabular-nums;
+        color: var(--x-ink);
+        background: #0e1536;
+        border: 1px solid var(--x-line);
+        border-radius: var(--r-s);
+        min-height: var(--tap);
+        padding: 6px 10px;
+        width: 100%;
+        color-scheme: dark;
+      }
+      .x-left { font: var(--type-heading); margin: 14px 0 4px; }
+      .x-left b { color: var(--x-moon); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
+      .x-sub { font: var(--type-small); color: var(--x-ink-2); margin: 2px 0 0; }
+      .x-best { font: var(--type-label); margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--x-line); }
+      .x-best b { color: var(--x-moon); font-variant-numeric: tabular-nums; }
+
+      .x-tones { display: flex; gap: 8px; }
+      .x-tone {
+        flex: 1;
+        min-height: var(--tap);
+        border-radius: var(--r-pill);
+        border: 1px solid var(--x-line);
+        background: var(--x-surface);
+        color: var(--x-ink-2);
+        font: var(--type-label);
+        cursor: pointer;
+        transition: background var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
+      }
+      .x-tone[aria-pressed="true"] { background: var(--x-moon); color: var(--x-navy); border-color: var(--x-moon); }
+      .x-mute {
+        flex: 0 0 var(--tap);
+        width: var(--tap);
+        min-height: var(--tap);
+        border-radius: 50%;
+        border: 1px solid var(--x-line);
+        background: var(--x-surface);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+      }
+      .x-mute[aria-pressed="false"] { opacity: 0.6; }
+      .x-voice { font: var(--type-caption); color: var(--x-ink-2); margin: 6px 0 0 4px; }
+      .x-voices { display: none; }
+
+      .x-nag-btn {
+        width: 100%;
+        min-height: 64px;
+        border: 0;
+        border-radius: var(--r-xl);
+        background-color: var(--x-moon);
+        background-image: linear-gradient(180deg, #fff6d6, var(--x-moon));
+        color: var(--x-navy);
+        font: var(--type-title);
+        font-weight: var(--weight-bold);
+        cursor: pointer;
+        box-shadow: 0 0 32px rgba(244, 233, 193, 0.25);
+        transition: transform var(--dur-quick) var(--ease-out);
+      }
+      .x-nag-btn:active { transform: scale(0.97); }
+      .x-nag {
+        min-height: 96px;
+        display: flex; flex-direction: column; justify-content: center;
+      }
+      .x-nag p { margin: 0; }
+      .x-nag-text { font: var(--type-heading); line-height: 1.45; }
+      .x-nag-text .x-tag { color: #ff9a8a; font-weight: var(--weight-bold); }
+      .x-nag-text.is-idle { color: var(--x-ink-2); font: var(--type-body); }
+      .x-nag.is-shuffling .x-nag-text { animation: x-shake 0.1s linear infinite; filter: blur(0.6px); opacity: 0.7; }
+      .x-nag.is-landed { animation: x-pop 0.35s var(--ease-out); }
+      @keyframes x-shake { 0% { transform: translateY(-3px); } 50% { transform: translateY(3px); } 100% { transform: translateY(-3px); } }
+      @keyframes x-pop { 0% { transform: scale(0.96); } 60% { transform: scale(1.02); } 100% { transform: scale(1); } }
+      .x-count { font: var(--type-small); color: var(--x-ink-2); margin: 0; text-align: center; }
+      .x-count b { color: var(--x-moon); font-variant-numeric: tabular-nums; }
+      .x-remark { display: block; color: var(--x-moon); margin-top: 2px; min-height: 1.4em; }
+
+      .x-bed-btn {
+        width: 100%;
+        min-height: 52px;
+        border-radius: var(--r-xl);
+        border: 1px solid var(--x-line);
+        background: transparent;
+        color: var(--x-ink);
+        font: var(--type-body);
+        font-weight: var(--weight-medium);
+        cursor: pointer;
+      }
+      .x-foot { font: var(--type-caption); color: var(--x-ink-2); text-align: center; margin: auto 0 0; padding-top: 8px; }
+      .x-credit { display: block; margin-top: 6px; opacity: 0.85; }
+      .x-nag-text.is-typing::after {
+        content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 2px;
+        vertical-align: -0.12em; background: var(--x-moon); opacity: 0.7;
+        animation: x-caret 0.8s steps(1) infinite;
+      }
+      @keyframes x-caret { 50% { opacity: 0; } }
+
+      .x-sleep {
+        position: fixed; inset: 0; z-index: 100;
+        background: #020309;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px;
+        opacity: 0; pointer-events: none;
+        transition: opacity 1.2s var(--ease-out);
+        padding: var(--gutter);
+        text-align: center;
+        cursor: pointer;
+      }
+      .x-sleep.is-on { opacity: 1; pointer-events: auto; }
+      .x-breath-wrap { width: 220px; height: 220px; display: grid; place-items: center; }
+      .x-breath {
+        width: 220px; height: 220px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(244, 233, 193, 0.35), rgba(244, 233, 193, 0.08) 65%, transparent 72%);
+        box-shadow: 0 0 60px rgba(244, 233, 193, 0.15);
+        transform: scale(0.45);
+        transition-property: transform;
+        transition-timing-function: ease-in-out;
+        display: grid; place-items: center;
+      }
+      .x-phase { font: var(--type-title); color: rgba(244, 233, 193, 0.8); margin: 0; }
+      .x-phase-n { font: var(--type-body); color: rgba(233, 236, 248, 0.5); font-variant-numeric: tabular-nums; margin: 4px 0 0; }
+      .x-night { font: var(--type-body); color: rgba(233, 236, 248, 0.6); margin: 0; line-height: 1.8; }
+      .x-night strong { display: block; font: var(--type-heading); color: rgba(244, 233, 193, 0.75); }
+      .x-exit { font: var(--type-caption); color: #8d91a3; margin: 0; }
+      @media (prefers-reduced-motion: reduce) {
+        .x-nag.is-shuffling .x-nag-text { animation: none; filter: none; }
+        .x-nag.is-landed { animation: none; }
+        .x-nag-text.is-typing::after { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="x-app">
+        <header class="x-top">
+          <div class="x-moon" aria-hidden="true"></div>
+          <p class="x-clock" id="clock" aria-live="off">--:--<small id="sec">--</small></p>
+          <p class="x-date" id="date"></p>
+          <p class="x-mood" id="mood"></p>
+        </header>
+
+        <section class="x-card" aria-label="睡眠计算">
+          <div class="x-times">
+            <label class="x-time">计划入睡<input type="time" id="bed" value="23:30" /></label>
+            <label class="x-time">起床时间<input type="time" id="wake" value="07:30" /></label>
+          </div>
+          <p class="x-left" id="left"></p>
+          <p class="x-sub" id="cycles"></p>
+          <p class="x-sub" id="plan"></p>
+          <p class="x-best" id="best"></p>
+        </section>
+
+        <section class="x-card" aria-label="催睡">
+          <p class="x-label">选个语气</p>
+          <div class="x-tones" role="group" aria-label="语气">
+            <button class="x-tone" type="button" data-tone="gentle" aria-pressed="true">温柔</button>
+            <button class="x-tone" type="button" data-tone="sharp" aria-pressed="false">御姐</button>
+            <button class="x-tone" type="button" data-tone="silly" aria-pressed="false">甜妹</button>
+            <button class="x-mute" type="button" id="muteBtn" aria-pressed="true" aria-label="声音：开">🔊</button>
+          </div>
+          <p class="x-voice" id="voiceCap">🎙 真人晚安·温柔</p>
+          <div class="x-nag" id="nag" aria-live="polite">
+            <p class="x-nag-text is-idle" id="nagText">点下面的按钮，让我来催你。</p>
+          </div>
+          <button class="x-nag-btn" type="button" id="nagBtn">催我睡觉</button>
+          <p class="x-count" style="margin-top: 12px">
+            今晚已经被催了 <b id="count">0</b> 次<span class="x-remark" id="remark"></span>
+          </p>
+        </section>
+
+        <button class="x-bed-btn" type="button" id="bedBtn">我真的去睡了 🌙</button>
+
+        <p class="x-foot">放下手机，就是最好的护肤品 🌙<span class="x-credit">声音来源 Freesound — AmeAngelofSin「goodnight little one sleep tight」(CC BY 4.0)、honest_cactus (CC0)、Alivvie (CC0)</span></p>
+      </main>
+    </div>
+
+    <div class="x-sleep" id="sleep" role="dialog" aria-label="晚安" aria-hidden="true">
+      <div class="x-breath-wrap">
+        <div class="x-breath" id="breath"></div>
+      </div>
+      <div>
+        <p class="x-phase" id="phase">吸气</p>
+        <p class="x-phase-n" id="phaseN">4</p>
+      </div>
+      <p class="x-night"><strong>晚安～</strong>吸气4秒，屏息7秒，呼气8秒</p>
+      <p class="x-exit">轻点任意处退出</p>
+    </div>
+    <div class="x-voices" id="voices" aria-hidden="true">
+      <!-- real human goodnight clips (Freesound), folded in as base64 data URIs -->
+      <audio id="v-gentle" src="gentle_goodnight.mp3" preload="auto"></audio>
+      <audio id="v-sharp" src="yujie_goodnight.mp3" preload="auto"></audio>
+      <audio id="v-silly" src="sweet_oyasumi.mp3" preload="auto"></audio>
+    </div>
+
+    <script src="hark.js"></script>
+    <script>
+      (function () {
+        document.documentElement.setAttribute("data-theme", "dark");
+        var $ = function (id) { return document.getElementById(id); };
+        var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+        var WEEK = ["日", "一", "二", "三", "四", "五", "六"];
+
+        function mood(h) {
+          if (h >= 22) return "该睡了";
+          if (h < 4) return "你已经在透支明天的自己了";
+          if (h < 6) return "天都要亮了！！";
+          if (h >= 18) return "还早，但可以开始准备了";
+          return "白天就好好过吧";
+        }
+
+        function parse(v) { var p = (v || "00:00").split(":"); return (+p[0]) * 60 + (+p[1]); }
+        function fmt(m) { m = ((m % 1440) + 1440) % 1440; return pad(Math.floor(m / 60)) + ":" + pad(m % 60); }
+        function dur(m) { var h = Math.floor(m / 60), r = m % 60; return h + " 小时 " + r + " 分"; }
+
+        function tick() {
+          var d = new Date(), h = d.getHours(), mi = d.getMinutes();
+          $("clock").firstChild.nodeValue = pad(h) + ":" + pad(mi);
+          $("sec").textContent = pad(d.getSeconds());
+          $("date").textContent = (d.getMonth() + 1) + "月" + d.getDate() + "日 星期" + WEEK[d.getDay()];
+          $("mood").textContent = mood(h);
+          calc(d);
+        }
+
+        function calc(d) {
+          var now = d.getHours() * 60 + d.getMinutes();
+          var wake = parse($("wake").value), bed = parse($("bed").value);
+          var left = (wake - now + 1440) % 1440;
+          if (left === 0) left = 1440;
+          $("left").innerHTML = "现在睡还能睡 <b>" + dur(left) + "</b>";
+          var c = Math.floor(left / 90);
+          $("cycles").textContent = "约 " + c + " 个 90 分钟睡眠周期" + (c < 4 ? "，有点危险" : "");
+          var plan = (wake - bed + 1440) % 1440 || 1440;
+          $("plan").textContent = "按计划 " + fmt(bed) + " 入睡：可睡 " + dur(plan) + "，" + Math.floor(plan / 90) + " 个周期";
+          $("best").innerHTML = "最佳入睡时间：<b>" + fmt(wake - 6 * 90 - 15) + "</b>（6 个周期）或 <b>" + fmt(wake - 5 * 90 - 15) + "</b>（5 个周期）";
+        }
+        $("bed").addEventListener("input", function () { calc(new Date()); });
+        $("wake").addEventListener("input", function () { calc(new Date()); });
+        tick();
+        setInterval(tick, 1000);
+
+        // Exactly lines.json; shown as on-screen text only
+        var LINES = {
+          gentle: [
+            "手机也想休息了，放过它吧。",
+            "今天已经很棒了，剩下的交给明天。",
+            "被窝已经帮你暖好了。",
+            "闭上眼睛，什么都不用想了。",
+            "明天的你，会感谢现在乖乖睡觉的你。",
+            "星星都睡了，你也该睡啦。",
+            "把烦恼放在枕头外面，明天再捡起来。",
+            "乖，听话，去睡觉。",
+            "你的眼睛辛苦一整天了，让它歇一歇吧。",
+            "晚安，好梦会来找你的。",
+            "今天的事情都做完啦，可以安心睡了。",
+            "慢慢呼吸，身体会越来越轻。",
+            "睡个好觉，比什么都重要。",
+            "我在这里陪你，数到十就睡好不好？",
+            "别熬啦，我会心疼的。",
+            "枕头软软的，被子香香的，快去吧。",
+            "今晚的月亮很温柔，像在哄你睡觉。",
+            "放下手机，给自己一个拥抱，然后睡觉。",
+            "明天会是很好的一天，先睡饱它。",
+            "晚安，世界会等你醒来。"
+          ],
+          sharp: [
+            "再刷下去，亲爱的，明天的黑眼圈能装下整个王者峡谷。",
+            "你不是在熬夜，宝贝，你是在熬自己。",
+            "这个视频不会因为你不看就消失，可你的头发会。",
+            "手机比你还累，人家都快没电了，懂点事。",
+            "你以为你在享受夜晚？是夜晚在慢慢享受你。",
+            "再不睡，明天的你只能靠咖啡续命，我可不心疼。",
+            "别装了，你根本没在等什么重要消息。",
+            "熬夜不会让你变强，只会让你变丑，自己选。",
+            "你刷的不是视频，是你的寿命进度条。",
+            "现在放下手机，还来得及挽回一点颜值。",
+            "明天闹钟响的时候，可别哭着来求我。",
+            "这么晚还不睡，是打算跟月亮抢班吗？",
+            "你的肝正在写辞职信，我已经批了。",
+            "再看一个就睡？这句话你说了八遍了，小朋友。",
+            "睡觉都不会，还想赢？",
+            "你的发际线正在悄悄撤退，我都看见了。",
+            "乖一点，别逼我把你手机没收了。",
+            "熬夜冠军没有奖杯，只有痘痘。",
+            "醒醒吧，你不是夜猫子，你只是不想面对明天。",
+            "最后说一遍，去，睡，觉。听话。"
+          ],
+          silly: [
+            "你的枕头已经报警了，说你失联三个小时啦～",
+            "月亮都打卡下班了，你还在加班刷手机呀？",
+            "梦里的小兵在等你推塔，快去快去～",
+            "你的床发来消息：再不来人家就生气了哼！",
+            "被子说它好冷，需要你去抱抱它嘛。",
+            "周公在梦里排队等你，号码牌都快过期啦～",
+            "你的小羊已经数完了，它们抱成一团睡着了。",
+            "再不睡，你的影子要先睡了，丢下你一个人哦。",
+            "你的梦已经加载到百分之九十九，就差你钻进去啦。",
+            "闹钟偷偷跟我说，它明天要特别特别大声。",
+            "你的眼皮正在申请加入睡觉联盟，快批准它～",
+            "外星人今晚来地球，只抓不睡觉的小朋友哦。",
+            "你的头发在开会，讨论要不要离家出走呜呜。",
+            "枕头已经变成棉花糖了，再不去就被我吃掉啦～",
+            "宇宙规定，晚上不睡觉的人，明天变成小猪猪。",
+            "你的手机说它要去梦里找充电宝，拜拜～",
+            "床底下的小怪兽都睡了，你还醒着，它好尴尬。",
+            "你的灵魂已经先上床啦，身体快跟上～",
+            "明天的太阳说，你不睡它就不出来，哼。",
+            "滴，睡觉卡余额不足，请立即充值睡眠哦～"
+          ]
+        };
+        var VOICE_CAP = { gentle: "真人晚安·温柔", sharp: "真人晚安·御姐", silly: "真人晚安·甜妹" };
+
+        var tone = "gentle", count = 0, lastIdx = -1, busy = false;
+        var tones = document.querySelectorAll(".x-tone");
+        tones.forEach(function (b) {
+          b.addEventListener("click", function () {
+            tone = b.getAttribute("data-tone");
+            tones.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+            $("voiceCap").textContent = "🎙 " + VOICE_CAP[tone];
+          });
+        });
+
+        function pickIdx(tn) {
+          var n = LINES[tn].length, i;
+          do { i = Math.floor(Math.random() * n); } while (i === lastIdx && n > 1);
+          return i;
+        }
+        function pick() { return LINES[tone][Math.floor(Math.random() * LINES[tone].length)]; }
+        function prefix() {
+          var h = new Date().getHours();
+          if (h >= 2 && h < 6) return "【最后通牒】";
+          if (h < 2) return "【紧急】";
+          return "";
+        }
+        function remarkFor(n) {
+          if (n >= 10) return "被催10次了，你是在挑战我吗";
+          if (n >= 5) return "5次了！床都开始怀疑人生了";
+          if (n >= 3) return "第3次了，手机不烫手吗？";
+          return "";
+        }
+
+        /* ---------- sound ---------- */
+        var soundOn = true, actx = null;
+        var SFX_VOL = 0.55; // effects sit under the voice
+        // Called only inside a tap handler, so audio is allowed to start.
+        function unlockAudio() {
+          if (!soundOn) return;
+          try {
+            if (!actx) { var AC = window.AudioContext || window.webkitAudioContext; if (AC) actx = new AC(); }
+            if (actx && actx.state === "suspended") actx.resume();
+          } catch (e) { actx = null; }
+        }
+        /* ---------- recorded voice clips ---------- */
+        var allClips = document.querySelectorAll("#voices audio");
+        var seq = 0, voiceT = null;
+        function clipEl(name) { return document.getElementById("v-" + name); }
+        /* ---------- typewriter reveal while the clip plays ---------- */
+        var typing = null, typeRaf = 0, typeSafe = null;
+        var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        function finishType() {
+          cancelAnimationFrame(typeRaf);
+          clearTimeout(typeSafe);
+          if (!typing) return;
+          typing.node.nodeValue = typing.full;
+          typing = null;
+          var el = document.getElementById("nagText");
+          el.classList.remove("is-typing");
+          document.getElementById("nag").removeAttribute("aria-busy");
+        }
+        function startType(ms) {
+          if (!typing) return;
+          if (reduceMotion) { finishType(); return; }
+          var t = typing, n = t.full.length, t0 = performance.now();
+          clearTimeout(typeSafe);
+          var step = function (now) {
+            if (typing !== t) return;
+            var k = Math.min(n, Math.ceil(((now - t0) / ms) * n));
+            t.node.nodeValue = t.full.slice(0, k);
+            if (k < n) typeRaf = requestAnimationFrame(step); else finishType();
+          };
+          typeRaf = requestAnimationFrame(step);
+        }
+        function stopVoice() {
+          finishType();
+          stopClips();
+        }
+        function stopClips() {
+          seq++;
+          clearTimeout(voiceT);
+          allClips.forEach(function (a) {
+            if (!a.paused) { try { a.pause(); } catch (e) {} }
+            try { a.currentTime = 0; } catch (e) {}
+          });
+        }
+        // Start the clips muted inside the tap, so they may play later outside it (iOS).
+        function primeClips(list) {
+          list.forEach(function (a) {
+            if (!a) return;
+            a.muted = true;
+            try {
+              var p = a.play();
+              var done = function () { if (a.muted) { a.pause(); try { a.currentTime = 0; } catch (e) {} } };
+              if (p && p.then) p.then(done, function () {}); else done();
+            } catch (e) {}
+          });
+        }
+        // play the one goodnight clip, typing the line out as it is spoken
+        function playClip(a, my) {
+          if (my !== seq || !soundOn || !a) { finishType(); return; }
+          var fired = false;
+          var onPlay = function () {
+            a.removeEventListener("playing", onPlay);
+            if (my !== seq) return;
+            var ms = isFinite(a.duration) && a.duration > 0 ? a.duration * 1000 : 1500;
+            startType(Math.max(900, Math.min(2600, ms)));
+          };
+          var done = function () {
+            if (fired) return;
+            fired = true;
+            a.removeEventListener("ended", done);
+            a.removeEventListener("error", done);
+            a.removeEventListener("playing", onPlay);
+            if (my === seq) finishType();
+          };
+          a.addEventListener("playing", onPlay);
+          a.addEventListener("ended", done);
+          a.addEventListener("error", done);
+          typeSafe = setTimeout(function () { if (my === seq && typing) startType(1200); }, 1500);
+          a.muted = false;
+          a.volume = 1;
+          try { a.currentTime = 0; } catch (e) {}
+          try {
+            var p = a.play();
+            if (p && p.catch) p.catch(function () { done(); });
+          } catch (e) { done(); }
+        }
+        // one shaped oscillator note
+        function note(type, f0, start, len, peak, f1, fMid) {
+          if (!actx) return;
+          var t = actx.currentTime + start;
+          var o = actx.createOscillator(), g = actx.createGain();
+          o.type = type;
+          o.frequency.setValueAtTime(f0, t);
+          if (fMid) {
+            o.frequency.exponentialRampToValueAtTime(fMid, t + len * 0.45);
+            o.frequency.exponentialRampToValueAtTime(f1 || f0, t + len);
+          } else if (f1) {
+            o.frequency.exponentialRampToValueAtTime(f1, t + len);
+          }
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak * SFX_VOL, t + Math.min(0.02, len / 4));
+          g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+          o.connect(g); g.connect(actx.destination);
+          o.start(t); o.stop(t + len + 0.05);
+        }
+        var SFX = {
+          gentle: function (d) { // music box: soft descending sine notes
+            [1568, 1319, 1047].forEach(function (f, i) {
+              note("sine", f, d + i * 0.14, 0.6, 0.12);
+              note("sine", f * 2, d + i * 0.14, 0.3, 0.025);
+            });
+            return d + 0.42;
+          },
+          sharp: function (d) { // 叮! buzzer blip
+            note("square", 880, d, 0.09, 0.08);
+            note("square", 1320, d + 0.1, 0.16, 0.08);
+            return d + 0.36;
+          },
+          silly: function (d) { // boing slide whistle: up then down
+            note("sine", 300, d, 0.42, 0.18, 260, 1400);
+            note("triangle", 150, d, 0.42, 0.05, 130, 700);
+            return d + 0.44;
+          }
+        };
+        function alarm() { // quick double beep
+          note("square", 1760, 0, 0.1, 0.07);
+          note("square", 1760, 0.16, 0.1, 0.07);
+          return 0.32;
+        }
+        // one real goodnight clip per tone
+        function clipFor(tn) { return clipEl(tn); }
+        function playNag(level, clip, tn) {
+          stopClips();
+          if (!soundOn) { finishType(); return; }
+          if (actx && actx.state === "suspended") { try { actx.resume(); } catch (e) {} }
+          var d = level ? alarm() : 0;
+          var end = SFX[tn](d);
+          var my = seq;
+          voiceT = setTimeout(function () { playClip(clip, my); }, Math.round(end * 1000));
+        }
+        function hum(len) { // very soft low hum for an inhale
+          if (!soundOn || !actx) return;
+          var t = actx.currentTime;
+          [110, 165].forEach(function (f, i) {
+            var o = actx.createOscillator(), g = actx.createGain();
+            o.type = "sine"; o.frequency.value = f;
+            var peak = i ? 0.012 : 0.035;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(peak, t + len * 0.45);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+            o.connect(g); g.connect(actx.destination);
+            o.start(t); o.stop(t + len + 0.05);
+          });
+        }
+        var muteBtn = $("muteBtn");
+        muteBtn.addEventListener("click", function () {
+          soundOn = !soundOn;
+          muteBtn.textContent = soundOn ? "🔊" : "🔇";
+          muteBtn.setAttribute("aria-pressed", soundOn ? "true" : "false");
+          muteBtn.setAttribute("aria-label", soundOn ? "声音：开" : "声音：关");
+          if (soundOn) unlockAudio(); else stopVoice();
+        });
+
+        var nag = $("nag"), text = $("nagText");
+        $("nagBtn").addEventListener("click", function () {
+          if (busy) return;
+          busy = true;
+          unlockAudio();
+          stopVoice();
+          var curTone = tone;
+          var idx = pickIdx(curTone), line = LINES[curTone][idx];
+          var p = prefix();
+          var level = p === "【最后通牒】" ? "final" : p ? "urgent" : "";
+          var clip = clipFor(curTone);
+          if (soundOn) primeClips([clip]);
+          text.classList.remove("is-idle");
+          nag.classList.remove("is-landed");
+          nag.classList.add("is-shuffling");
+          var t = setInterval(function () { text.textContent = pick(); }, 60);
+          setTimeout(function () {
+            clearInterval(t);
+            nag.classList.remove("is-shuffling");
+            lastIdx = idx;
+            text.innerHTML = "";
+            if (p) { var s = document.createElement("span"); s.className = "x-tag"; s.textContent = p; text.appendChild(s); }
+            var lineNode = document.createTextNode(soundOn && !reduceMotion ? "" : line);
+            text.appendChild(lineNode);
+            if (soundOn && !reduceMotion) {
+              typing = { node: lineNode, full: line };
+              text.classList.add("is-typing");
+              nag.setAttribute("aria-busy", "true");
+            }
+            void nag.offsetWidth;
+            nag.classList.add("is-landed");
+            count++;
+            $("count").textContent = count;
+            $("remark").textContent = remarkFor(count);
+            if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+            playNag(level, clip, curTone);
+            busy = false;
+          }, 500);
+        });
+
+        var sleep = $("sleep"), breath = $("breath"), phase = $("phase"), phaseN = $("phaseN");
+        var PH = [
+          { name: "吸气", s: 4, scale: 1 },
+          { name: "屏息", s: 7, scale: 1 },
+          { name: "呼气", s: 8, scale: 0.45 }
+        ];
+        var timer = null, countT = null, idx = 0, on = false;
+        function runPhase() {
+          if (!on) return;
+          var p = PH[idx], left = p.s;
+          breath.style.transitionDuration = p.s + "s";
+          breath.style.transform = "scale(" + p.scale + ")";
+          phase.textContent = p.name;
+          phaseN.textContent = left;
+          if (idx === 0) hum(p.s);
+          clearInterval(countT);
+          countT = setInterval(function () { left--; if (left > 0) phaseN.textContent = left; }, 1000);
+          timer = setTimeout(function () { idx = (idx + 1) % PH.length; runPhase(); }, p.s * 1000);
+        }
+        $("bedBtn").addEventListener("click", function () {
+          on = true; idx = 0;
+          stopVoice();
+          unlockAudio();
+          breath.style.transitionDuration = "0s";
+          breath.style.transform = "scale(0.45)";
+          sleep.classList.add("is-on");
+          sleep.setAttribute("aria-hidden", "false");
+          setTimeout(runPhase, 400);
+        });
+        sleep.addEventListener("click", function () {
+          on = false;
+          clearTimeout(timer); clearInterval(countT);
+          stopVoice();
+          sleep.classList.remove("is-on");
+          sleep.setAttribute("aria-hidden", "true");
+        });
+      })();
+    </script>
+  </body>
+</html>
