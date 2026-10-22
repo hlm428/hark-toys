@@ -15,6 +15,6 @@ jobs:
           pip install -U yt-dlp
           sudo apt-get install -y ffmpeg >/dev/null
           mkdir -p audio
-          yt-dlp -x --audio-format mp3 --audio-quality 2 -o "audio/%(id)s.%(ext)s" "${{ github.event.inputs.url }}"
+          for c in android_vr tv_simply web_embedded mweb ios default; do yt-dlp --extractor-args "youtube:player_client=$c" -x --audio-format mp3 --audio-quality 2 -o "audio/%(id)s.%(ext)s" "${{ github.event.inputs.url }}" && break; done; ls audio/*.mp3
           git config user.name bot; git config user.email bot@x
           git add audio; git commit -m audio; git push
