@@ -15,6 +15,8 @@ html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,"Ping
 .item.p .bg{background:radial-gradient(circle at 50% 40%,#ff9ec7,#7b3fe4 70%,#2b0b4d);filter:none;transform:none;inset:0}
 .media{position:relative;max-width:92%;max-height:70%;width:auto;border-radius:14px;z-index:1}
 video.media{width:92%}
+.tap{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;width:76px;height:76px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:34px;line-height:76px;text-align:center;pointer-events:none}
+.item.np .tap{display:block}
 .side{position:absolute;right:10px;bottom:120px;z-index:3;display:flex;flex-direction:column;gap:20px;align-items:center}
 .btn{display:flex;flex-direction:column;align-items:center;font-size:12px;cursor:pointer;user-select:none;text-shadow:0 1px 3px #000}
 .btn b{font-size:34px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));transition:transform .15s}
@@ -108,15 +110,16 @@ function toast(s){const t=document.getElementById('toast');t.textContent=s;t.sty
 function card(x){
  const d=document.createElement('div');d.className='item'+(x.p?' p':'');d.dataset.id=x.id;
  const isV=x.type&&x.type.startsWith('video');const sy=synced(x.id);const tag=(x.hark?`<span class="hl">${x.from==='你'?'你发的':'Hark 推荐'}</span>${x.date?`<small style="opacity:.7">${x.date}</small> `:''}`:'')+(sy.like?'<span class="hl" style="background:#fff;color:#fe2c55">❤️ Hark 赞了</span>':'')+((x.hark||sy.like)?'<br>':'');const ncm=sy.cm.length+(comments[x.id]||[]).filter(c=>!c.sent).length;
- d.innerHTML=`<div class="bg" style="${x.p?'':`background-image:url('${x.src}')`}"></div>
- ${isV?`<video class="media" src="${x.src}" loop playsinline muted></video>`:`<img class="media" src="${x.src}" loading="lazy" alt="">`}
+ d.innerHTML=`<div class="bg" style="${x.p?'':`background-image:url('${isV?(x.poster||(x.own?'':x.src.replace(/\.mp4$/,'.jpg'))):x.src}')`}"></div>
+ ${isV?`<video class="media" src="${x.src}" ${x.own?'':`poster="${x.poster||x.src.replace(/\.mp4$/,'.jpg')}"`} loop playsinline webkit-playsinline muted autoplay preload="auto"></video><div class="tap">▶</div>`:`<img class="media" src="${x.src}" loading="lazy" alt="">`}
  <div class="side"><div class="avatar">${x.a||'😎'}</div>
  <div class="btn lk"><b>${likes[x.id]?'❤️':'🤍'}</b><span>${fmt((BASE[x.id]||0)+(likes[x.id]?1:0)+(sy.like?1:0))}</span></div>
  <div class="btn cm"><b>💬</b><span>${ncm}</span></div>
  <div class="btn dl"><b>⬇️</b><span>保存</span></div>
  <div class="btn sh"><b>↗️</b><span>分享</span></div></div>
  <div class="cap"><h3>@${x.u}</h3><p>${tag}${x.t}</p></div>${x.own?'<div class="del">删除</div>':''}`;
- let last=0;d.addEventListener('click',e=>{if(e.target.closest('.side,.del'))return;const now=Date.now();if(now-last<300){like(x,d,true,e)}else{const v=d.querySelector('video');if(v){setTimeout(()=>{if(Date.now()-last>=300){v.paused?v.play():v.pause()}},310)}}last=now});
+ let last=0;d.addEventListener('click',e=>{if(e.target.closest('.side,.del'))return;const now=Date.now();if(now-last<300){like(x,d,true,e)}else{const v=d.querySelector('video');if(v){if(v.paused){v.muted=true;v.play().then(()=>d.classList.remove('np')).catch(()=>d.classList.add('np'))}else v.pause()}}last=now});
+ const vv=d.querySelector('video');if(vv){vv.addEventListener('playing',()=>d.classList.remove('np'));vv.addEventListener('error',()=>{if(!vv.dataset.cdn&&!x.own){vv.dataset.cdn=1;vv.src='https://cdn.jsdelivr.net/gh/hlm428/hark-toys@main/douyin/'+x.src;vv.load();vv.play().catch(()=>d.classList.add('np'))}},true)}
  d.querySelector('.lk').onclick=()=>like(x,d,false);
  d.querySelector('.cm').onclick=()=>openC(x,d);
  d.querySelector('.dl').onclick=()=>{const a=document.createElement('a');a.href=x.src;a.download=(x.u||'diyin')+(isV?'.mp4':'.gif');document.body.appendChild(a);a.click();a.remove();toast('开始下载（微信里请长按图片保存）')};
@@ -134,7 +137,7 @@ function render(){const sy=synced(cur.x.id).cm.map(c=>({...c,syn:1}));const loc=
 document.getElementById('csend').onclick=()=>{const i=document.getElementById('cinput');const s=i.value.trim();if(!s)return;(comments[cur.x.id]=comments[cur.x.id]||[]).push({s,t:new Date().toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})});LS.set('dy_comments',comments);i.value='';render();if(confirm('把这条评论也发给 Hark 看吗？\n（会跳到 GitHub，点绿色 Create 就发出去了）')){const arr=comments[cur.x.id];arr[arr.length-1].sent=1;LS.set('dy_comments',comments);issue('[滴音评论] '+cur.x.id,'昵称：'+prof().name+'\n视频：'+cur.x.id+'（'+(cur.x.t||'').slice(0,30)+'）\n评论：'+s+'\n\n（直接点右下角绿色「Create」发送即可）')}};
 document.getElementById('cinput').onkeydown=e=>{if(e.key==='Enter')document.getElementById('csend').click()};
 mask.onclick=closeC;document.getElementById('cclose').onclick=closeC;
-const io=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target.querySelector('video');if(v){e.isIntersecting?v.play().catch(()=>{}):v.pause()}}),{threshold:.6});
+const io=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target.querySelector('video');if(v){if(e.isIntersecting){v.muted=true;v.play().then(()=>e.target.classList.remove('np')).catch(()=>e.target.classList.add('np'))}else v.pause()}}),{threshold:.6});
 async function show(list,emptyMsg){feed.innerHTML='';feed.scrollTop=0;if(!list.length){feed.innerHTML=`<div class="empty">${emptyMsg}</div>`;return}list.forEach(x=>{const c=card(x);feed.appendChild(c);io.observe(c)})}
 async function go(m){mode=m;closePage();document.querySelectorAll('.top span').forEach(s=>s.classList.toggle('act',s.dataset.t===m));
  if(m==='rec'){await loadHark();show([...HARK,...BUILTIN])}
