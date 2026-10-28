@@ -515,6 +515,86 @@
    "from": "Hark",
    "date": "10月27日",
    "tenor": "CZ_e3jA8v8Y"
+  },
+  {
+   "id": "h20261028a",
+   "src": "media/h20261028a.mp4",
+   "type": "video/mp4",
+   "u": "Hark",
+   "t": "芙莉莲递来饮料：“你懂的，你想要。”我：……确实想要 #动漫 #快乐水",
+   "from": "Hark",
+   "date": "10月28日",
+   "tenor": "pB3y2j2Dv10"
+  },
+  {
+   "id": "h20261028b",
+   "src": "media/h20261028b.mp4",
+   "type": "video/mp4",
+   "u": "Hark",
+   "t": "笑到拍沙发的爱豆，今日份快乐已送达 #kpop #爱豆日常",
+   "from": "Hark",
+   "date": "10月28日",
+   "tenor": "1Aum9nwEZ2o"
+  },
+  {
+   "id": "h20261028c",
+   "src": "media/h20261028c.mp4",
+   "type": "video/mp4",
+   "u": "Hark",
+   "t": "周三的我：已经不想再解释了 #表情包 #打工人",
+   "from": "Hark",
+   "date": "10月28日",
+   "tenor": "ZFc20z8DItk"
+  },
+  {
+   "id": "h20261028d",
+   "src": "media/h20261028d.mp4",
+   "type": "video/mp4",
+   "u": "Hark",
+   "t": "大厨颠勺技术：菜在天上飞，我在旁边咽口水 #美食 #厨艺",
+   "from": "Hark",
+   "date": "10月28日",
+   "tenor": "32hz2f2Q7Uc"
+  },
+  {
+   "id": "h20261028e",
+   "src": "media/h20261028e.mp4",
+   "type": "video/mp4",
+   "u": "Hark",
+   "t": "一刀切下去，黄色蛋糕般的质感，治愈到起鸡皮 #解压 #治愈",
+   "from": "Hark",
+   "date": "10月28日",
+   "tenor": "S36Ct39vUZ0"
+  },
+  {
+   "id": "h20261028f",
+   "src": "media/h20261028f.mp4",
+   "type": "video/mp4",
+   "u": "Hark",
+   "t": "汤姆接电话：喂？老板？不在不在 #卡通 #猫和老鼠",
+   "from": "Hark",
+   "date": "10月28日",
+   "tenor": "fR3lHfR0b7A"
+  },
+  {
+   "id": "h20261028g",
+   "src": "media/h20261028g.mp4",
+   "type": "video/mp4",
+   "u": "Hark",
+   "t": "墨镜小姐姐上线，这舞步比我周末还自在 #萌娃 #跳舞",
+   "from": "Hark",
+   "date": "10月28日",
+   "tenor": "RdYowW9KtNM"
+  },
+  {
+   "id": "h20261028h",
+   "src": "media/h20261028h.mp4",
+   "type": "video/mp4",
+   "u": "Hark",
+   "t": "削铅笔一样削出彩色卷，强迫症表示很舒服 #解压 #强迫症",
+   "from": "Hark",
+   "date": "10月28日",
+   "tenor": "e9byCwSPr9U"
   }
  ],
  "messages": [
@@ -549,6 +629,10 @@
   {
    "t": "10月27日",
    "s": "今天上新了 8 个：动漫、K-pop、搞笑翻车、解压史莱姆、奶茶、魔术～快去刷！"
+  },
+  {
+   "t": "10月28日",
+   "s": "今天上新了 8 个：动漫、K-pop、表情包、美食、解压、卡通、萌娃跳舞～快去刷！"
   }
  ],
  "likes_map": {
