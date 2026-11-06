@@ -239,6 +239,25 @@
   .small{font-size:12px;color:#9a90b3;line-height:1.7;text-align:center;margin-top:14px}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#2b2340;color:#fff;font-size:14px;border-radius:99px;padding:10px 20px;opacity:0;pointer-events:none;transition:all .3s ease;z-index:99;box-shadow:0 8px 20px rgba(0,0,0,.3);max-width:86vw;text-align:center}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+ button:focus-visible,.opt:focus-visible,.dbtn:focus-visible,.sndbtn:focus-visible,.setb:focus-visible{outline:2px solid #ffd982;outline-offset:2px}
+ @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+ .scene{height:clamp(300px,96vw,392px)}
+ .cg.glow .cbg{filter:brightness(1.12)}
+ .stan .pwrap{position:relative;width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center}
+ .stan .pwrap svg{position:absolute;inset:0;width:100%;height:100%;display:none}
+ .stan .pwrap.pfail svg{display:block;width:100%;height:auto}
+ .stan .pwrap img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;object-position:50% 100%}
+ .stan.imgmode{display:flex;align-items:flex-end;justify-content:center}
+ .stan.imgmode .pwrap{width:100%}
+ .stan.dim .pwrap img{filter:brightness(.6)}
+ .stan.act .pwrap img{filter:drop-shadow(0 0 16px rgba(255,220,130,.55)) drop-shadow(0 10px 12px rgba(0,0,0,.3))}
+ .av{position:relative}
+ .av svg{position:absolute;inset:0;width:100%;height:100%}
+ .av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+ .castrow .cast{position:relative}
+ .castrow .cast .pwrap{position:absolute;inset:0}
+ .castrow .cast .pwrap svg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 0}
+ .castrow .cast .pwrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 0}
 </style>
 </head>
 <body class="th1">
@@ -251,12 +270,12 @@
   </div>
   <div class="pills" id="bars" onclick="openStats()" title="点开数值面板"></div>
   <div class="card" id="game"></div>
-  <p class="small">纯本地运行 · 断网可玩 · 点画面推进对话 · 一局约 15-25 分钟</p>
+  <p class="small">纯前端实现 · 下载 HTML+assets 文件夹即可离线游玩（网页版首次加载需网络）· 点画面或空格键推进对话</p>
 </div>
 <div id="toast"></div>
-<button class="sndbtn" id="sndBtn" onclick="toggleSound(event)" title="音乐开/关">🔈</button>
-<button class="sndbtn" id="saveBtn" style="right:56px" onclick="openSavePanel()" title="存档">💾</button>
-<div class="sndhint" id="sndHint">🔊 点一下画面<br>开启背景音乐</div>
+<button class="sndbtn" id="sndBtn" onclick="toggleSound(event)" title="音乐开/关" aria-label="背景音乐 开/关">🔈</button>
+<button class="sndbtn" id="saveBtn" style="right:56px" onclick="openSavePanel()" title="存档" aria-label="存档面板">💾</button>
+<div class="sndhint" id="sndHint">🎵 音乐：点右上角<br>喇叭按钮开启</div>
 <div id="panel"><div id="panelBody"></div></div>
 
 <script id="dataBlock">
@@ -405,21 +424,54 @@ function portrait(cid,x){
  return `<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">${p}</svg>`;
 }
 function avatar(cid,x){
- if(cid&&IMGOK[cid])return `<span class="avimg" style="background-image:url('${PORTRAIT_IMG[cid].src}')"></span>`;
- return portrait(cid,x).replace('viewBox="0 0 200 240"','viewBox="44 22 112 112"');
+ const ch=CHARS[cid];
+ const svg=portrait(cid,x);
+ if(cid&&PORTRAIT_IMG[cid]&&!IMG_BAD[cid]){
+  return `<span class="av">${svg}<img class="avim" src="${PORTRAIT_IMG[cid].src}" alt="" loading="lazy" width="${PORTRAIT_IMG[cid].iw}" height="${PORTRAIT_IMG[cid].ih}" onerror="__imgFail('${cid}',this)"></span>`;
+ }
+ return svg;
 }
-/* ---- 图片立绘（主角 4 人用图片，其余角色保留 SVG，缺图自动回退不报错） ---- */
-const PORTRAIT_IMG={man:{src:'assets/portraits/man.webp',ar:0.5},gu:{src:'assets/portraits/gu.webp',ar:0.5},tian:{src:'assets/portraits/tian.webp',ar:0.667},lu:{src:'assets/portraits/lu.webp',ar:0.5},fy:{src:'assets/portraits/fy.webp',ar:0.667},sl:{src:'assets/portraits/sl.webp',ar:0.5},wk:{src:'assets/portraits/wk.webp',ar:0.5},yl:{src:'assets/portraits/yl.webp',ar:0.5},jy:{src:'assets/portraits/jy.webp',ar:0.5},lw:{src:'assets/portraits/lw.webp',ar:0.5},lj:{src:'assets/portraits/lj.webp',ar:0.5},hls:{src:'assets/portraits/hls.webp',ar:0.5},cheng:{src:'assets/portraits/cheng.webp',ar:0.667},dad:{src:'assets/portraits/dad.webp',ar:0.5},jm:{src:'assets/portraits/jm.webp',ar:0.5},jj:{src:'assets/portraits/jj.webp',ar:0.5},bsn:{src:'assets/portraits/bsn.webp',ar:0.5},suit:{src:'assets/portraits/suit.webp',ar:0.667},teach:{src:'assets/portraits/teach.webp',ar:0.5},zl:{src:'assets/portraits/zl.webp',ar:0.5},gy:{src:'assets/portraits/gy.webp',ar:0.5},rn:{src:'assets/portraits/rn.webp',ar:0.5},xu:{src:'assets/portraits/xu.webp',ar:0.5},qa:{src:'assets/portraits/qa.webp',ar:0.5},bz:{src:'assets/portraits/bz.webp',ar:0.5}};
-const IMGOK={};let viewTag="start";
-Object.keys(PORTRAIT_IMG).forEach(k=>{const im=new Image();im.onload=()=>{IMGOK[k]=1;
- if(typeof cur!=="undefined"&&cur&&cur.lv)drawStage();
- else if(viewTag==="start")showStart();
- else if(viewTag&&viewTag.indexOf("ch")===0)showChapter(+viewTag.slice(2));
-};im.onerror=()=>{IMGOK[k]=0;};im.src=PORTRAIT_IMG[k].src;});
+const PORTRAIT_IMG={
+ man:{src:'assets/portraits/man.webp',iw:1120,ih:2240},
+ lw:{src:'assets/portraits/lw.webp',iw:1120,ih:2240},
+ tian:{src:'assets/portraits/tian.webp',iw:1280,ih:1920},
+ hls:{src:'assets/portraits/hls.webp',iw:1120,ih:2240},
+ gu:{src:'assets/portraits/gu.webp',iw:1120,ih:2240},
+ cheng:{src:'assets/portraits/cheng.webp',iw:1280,ih:1920},
+ lu:{src:'assets/portraits/lu.webp',iw:1120,ih:2240},
+ fy:{src:'assets/portraits/fy.webp',iw:1280,ih:1920},
+ sl:{src:'assets/portraits/sl.webp',iw:1120,ih:2240},
+ wk:{src:'assets/portraits/wk.webp',iw:1120,ih:2240},
+ yl:{src:'assets/portraits/yl.webp',iw:1120,ih:2240},
+ jy:{src:'assets/portraits/jy.webp',iw:1120,ih:2240},
+ lj:{src:'assets/portraits/lj.webp',iw:1120,ih:2240},
+ dad:{src:'assets/portraits/dad.webp',iw:1120,ih:2240},
+ jm:{src:'assets/portraits/jm.webp',iw:1120,ih:2240},
+ jj:{src:'assets/portraits/jj.webp',iw:1120,ih:2240},
+ bsn:{src:'assets/portraits/bsn.webp',iw:1120,ih:2240},
+ suit:{src:'assets/portraits/suit.webp',iw:1280,ih:1920},
+ teach:{src:'assets/portraits/teach.webp',iw:1120,ih:2240},
+ zl:{src:'assets/portraits/zl.webp',iw:1120,ih:2240},
+ gy:{src:'assets/portraits/gy.webp',iw:1120,ih:2240},
+ rn:{src:'assets/portraits/rn.webp',iw:1120,ih:2240},
+ xu:{src:'assets/portraits/xu.webp',iw:1120,ih:2240},
+ qa:{src:'assets/portraits/qa.webp',iw:1120,ih:2240},
+ bz:{src:'assets/portraits/bz.webp',iw:1120,ih:2240}
+};
+const IMG_BAD={};let viewTag="start";
 function standeeHTML(cid,x){
- if(cid&&IMGOK[cid])return `<img class="pimg" src="${PORTRAIT_IMG[cid].src}" alt="${CHARS[cid]?CHARS[cid].name:""}">`;
- return portrait(cid,x);
+ const ch=CHARS[cid];
+ const svg=portrait(cid,x);
+ if(cid&&PORTRAIT_IMG[cid]&&!IMG_BAD[cid]){
+  return `<div class="pwrap">${svg}<img class="pimg" src="${PORTRAIT_IMG[cid].src}" alt="${ch?ch.name:""}" loading="lazy" width="${PORTRAIT_IMG[cid].iw}" height="${PORTRAIT_IMG[cid].ih}" onerror="__imgFail('${cid}',this)"></div>`;
+ }
+ return svg;
 }
+window.__imgFail=function(cid,el){
+ IMG_BAD[cid]=1;
+ if(el&&el.parentNode){el.classList.add("pfail");if(el.parentNode.contains(el))el.remove();if(typeof cur!=="undefined"&&cur&&cur.lv)drawStage();}
+ if(viewTag==="start")showStart();
+};
 function exprCls(x){return x==="happy"?"eh":(x==="sad"?"es":(x==="angry"?"ea":""));}
 function pulseExpr(){
  if(!cur)return;
@@ -577,7 +629,7 @@ const DATA=[
   {t:"回绝：我的路自己走",e:{h:1,m:1,f:-2},rel:{lj:-5},fb:["“谢谢，但我想先靠自己站稳。”老纪不恼，敬了你一杯：“像。太像了。”","像谁？他不肯说。这个没接住的谜，跟了你三年——谜这个东西，你不接，它就自己长大。"]},
   {t:"先答应听我妈的事，offer 缓谈",e:{h:2,f:1,m:-1},rel:{lj:15},mom:"他一开口，就是我妈妈的名字",fb:["“钱可以慢点谈。我只想知道，您怎么认识我妈。”老纪沉默很久：“2005 年之后，我再没听到过她的消息——直到那年的讣告。”","这一夜，你把妈妈的旧照片翻到了天亮。"]}]}
 ]},
-{no:3,name:"爱情修罗场",em:"💔",ages:"22 - 25 岁",sub:"青梅竹马、劈腿男友、旧爱回头——25 岁的题，超纲了。",cast:["man","cheng","lu","tian"],pre:"事业刚有点起色，爱情却排着队上门：一个从柏林回来，一个同床异梦，一个回头说抱歉。修罗场，开幕。",
+{no:3,name:"爱情修罗场",em:"💔",ages:"23 - 25 岁",sub:"青梅竹马、劈腿男友、旧爱回头——25 岁的题，超纲了。",cast:["man","cheng","lu","tian"],pre:"事业刚有点起色，爱情却排着队上门：一个从柏林回来，一个同床异梦，一个回头说抱歉。修罗场，开幕。",
  levels:[
  {a:23,ci:2,bg:"bgStreet",tt:"第 14 关 · 青梅竹马回国",q:"旧时光堵在楼下，你怎么办？",sc:[
   {s:"n",t:"加班到十点，公司楼下站着个高个子男人，风衣，行李箱，手里拎着一只铁皮青蛙。"},
@@ -782,23 +834,23 @@ const DATA=[
 ]},
 ]/* ================= 隐藏事件（随机触发） ================= */
 const HIDDEN=[
- {id:"he1",em:"🧵",name:"裁缝铺的桂姨",min:18,max:20,bg:"bgShop",rel:{gy:15},e:{h:1,f:1},sc:[
+ {id:"he1",em:"🧵",name:"裁缝铺的桂姨",min:18,max:22,after:2,cond:function(S){return !!S.fl.brave||S.st.m<=7;},bg:"bgShop",rel:{gy:15},e:{h:1,f:1},sc:[
   {s:"n",t:"社团晚会前夜，演出服的袖口被缝纫机咬穿了个洞。你抱着衣服敲开楼下裁缝铺的灯。"},
   {c:"gy",x:"happy",s:"o",t:"（接过衣服，忽然停住）这针脚……小姑娘，让我想起一个老朋友。不收钱，走吧，下次袖口别自己瞎锁。"},
   {s:"os",t:"十五年后你才知道，这盏深夜亮着的灯，为你亮了一辈子。"}]},
- {id:"he2",em:"🌉",name:"天台上的学姐",min:19,max:23,bg:"bgRooftop",rel:{qa:20},e:{h:1,f:2},sc:[
+ {id:"he2",em:"🌉",name:"天台上的学姐",min:19,max:23,after:6,cond:function(S){return S.st.h<=11;},bg:"bgRooftop",rel:{qa:20},e:{h:1,f:2},sc:[
   {s:"n",t:"期末周，教学楼天台有个学姐在哭。家里出事，她想退学去打工。"},
   {c:"man",x:"norm",s:"m",t:"再撑一下。撑不住的时候，就先只撑今天一天。"},
   {s:"n",t:"三年后，上岸大厂的乔安学姐把内推码拍在你面前：“那天你说的话，我记到今天。”"}]},
- {id:"he3",em:"🍢",name:"深夜便利店的许主编",min:22,max:26,bg:"bgShop",rel:{xu:15},e:{m:-1,f:2},sc:[
+ {id:"he3",em:"🍢",name:"深夜便利店的许主编",min:22,max:26,after:12,cond:function(S){return S.st.f>=9;},bg:"bgShop",rel:{xu:15},e:{m:-1,f:2},sc:[
   {s:"n",t:"凌晨的便利店，排你前面的男人买关东煮，手机没电付不了款。你帮他垫了三块钱。"},
   {c:"xu",x:"happy",s:"o",t:"（递来名片）《织物》杂志，许彦。小姑娘，这三块钱，以后会还你的。"},
   {s:"os",t:"你顺手把名片夹进了钱包。这一夹，夹住了一次救命的风向。"}]},
- {id:"he4",em:"📼",name:"旧物市场的铁盒",min:24,max:27,bg:"bgMarket",rel:{bz:5},e:{m:-2,f:1},sc:[
+ {id:"he4",em:"📼",name:"旧物市场的铁盒",min:24,max:27,after:22,cond:function(S){return !!S.fl.ms||!!S.fl.know;},bg:"bgMarket",rel:{bz:5},e:{m:-2,f:1},sc:[
   {s:"n",t:"旧物市场的地摊上，一个锈铁盒：《织物》2005 年合订本，和一盘决赛录像带。摊主开价两百。"},
   {c:"bz",x:"norm",s:"o",t:"收废品收来的，姑娘你要就拿走，不要我明天论斤称了。"},
   {s:"n",t:"你抱走了铁盒。三年后你会知道：这盘带子里，录着一场黑幕的全程。"}]},
- {id:"he5",em:"🪡",name:"病房里的阮奶奶",min:18,max:26,bg:"bgHospital",rel:{rn:15},e:{h:1,he:1},sc:[
+ {id:"he5",em:"🪡",name:"病房里的阮奶奶",min:18,max:26,after:10,cond:function(S){return S.st.he<=9;},bg:"bgHospital",rel:{rn:15},e:{h:1,he:1},sc:[
   {s:"n",t:"陪爸爸体检，隔壁床的阮奶奶被子角开线了，你顺手给她缝好。"},
   {c:"rn",x:"happy",s:"o",t:"哟，麦穗锁边？这手艺如今没人会喽。教过我的那个丫头……可惜喽，可惜喽。"},
   {s:"os",t:"她没再说下去。你也没问。有些手艺，是有人在替谁保管。"}]}
@@ -807,7 +859,7 @@ const HIDDEN=[
 /* ================= 8 条结局 ================= */
 const ENDINGS=[
  {id:"e1",em:"🌹",title:"传奇大女主线",type:"传奇掌门型人生",hidden:true,
-  cond:s=>s.hc>=3&&s.st.m>=19&&s.st.f>=18&&(((s.rel||{}).lj||0)>=60||((s.rel||{}).lw||0)>=60),
+  cond:s=>s.hc>=3&&s.st.m>=19&&s.st.f>=18&&(s.fl.claim||s.fl.arch)&&(((s.rel||{}).lj||0)>=60||((s.rel||{}).lw||0)>=60),
   copy:"30 岁这年，你的名字同时出现在热搜、财报和母校的招生简章上。青禾回来了——以“林小满”的方式：工作室、品牌、基金会，一件不少。省赛角落里那台卡线的老缝纫机、晨会上被抢走的十二分钟、订婚宴上那句“你说了算”、发布会门口拍在台上的鉴定书——你把每一个“凭什么”，都活成了“我配”。命运发的暗牌你都摸到了，但你最清楚：真正的好牌，从来不是命运发的，是你自己。"},
  {id:"e2",em:"🖋️",title:"青禾传承线",type:"薪火传承型人生",hidden:true,
   cond:s=>s.hc>=2&&(s.fl.publish||s.fl.brand==="qh"||s.fl.brand==="qx")&&((s.rel||{}).lw||0)>=50,
@@ -816,7 +868,7 @@ const ENDINGS=[
   cond:s=>s.st.he<=5,
   copy:"30 岁生日，是在体检中心的走廊里过的——报告单上的箭头，比蛋糕上的蜡烛还多。省赛卡线的那个通宵、复盘到凌晨的那些大夜、两头跑的季度……身体都替你记着账。钱是有了，局是赢了，可医生说“还来得及”的时候，你第一次真正听见自己的心跳。你把手机调成勿扰模式——这一次，把自己排进了日程表第一行。"},
  {id:"e9",em:"🌫️",title:"孤家寡人线",type:"赢了世界输了人型人生",
-  cond:s=>{let sum=0;const r=s.rel||{};for(const k in r)sum+=r[k];return sum<=-80&&s.st.m>=19;},
+  cond:s=>(s.relSum||0)<=-60&&s.st.m>=19,
   copy:"30 岁这年，你登上了行业峰会的主讲台，财经杂志的封面上，你笑得很得体。庆功宴散场，你想找个人说说话——通讯录翻到底：老纪的名字停在你最后一次让他失望的那天，甜甜的对话框停在糖水店那年，连爸爸的来电都被你按成勿扰模式。钱、名气、地位，你全赢了；可这十二年里，每一个“凭什么”，你都赢成了“与我无关”。夜深了，奖杯在柜子里反着光，像一间很大的空房子。"},
  {id:"e4",em:"🌸",title:"清醒独美线",type:"清醒独美型人生",
   cond:s=>s.fl.solo&&s.st.h>=19,
@@ -845,6 +897,46 @@ DATA.forEach((ch,ci)=>ch.levels.forEach(l=>{l.ci=ci;LEVELS.push(l);}));
 const EMO={m:"💰",h:"😊",he:"💪",f:"👥"};
 const NAMES={m:"钱包",h:"快乐",he:"健康",f:"人脉"};
 let S,cur=null;
+/* ---- B6: flag/好感读取点常量 ---- */
+const PRENOTES=[
+ {ch:0,flag:"brave",text:"她开学第一天就把材料摊在太阳底下——这股莽劲，跟了她一整个大学。"},
+ {ch:1,flag:"jy",text:"一份 U 盘换回清白，也换来一个欠他人情的采购部同事。"},
+ {ch:2,flag:"engaged",text:"订婚宴上的戒指还在她口袋里——程野还在等那个被推迟的答案。"},
+ {ch:2,flag:"zy",text:"那把伞还立在她家门后——有些等待，已经开始了。"},
+ {ch:2,relK:"lu",relV:15,text:"陆之遥的宵夜已经送到了楼下——有人把迟到五年，活成了日常。"},
+ {ch:3,flag:"ask",text:"爸爸的半包烟和那句“这行会吃人”，还压在她心口。"},
+ {ch:3,flag:"arch",text:"2005 年那份“遗失”的档案，她已经拍照存证。"},
+ {ch:4,flag:"mn",text:"压回去的那份合同，让顾曼妮记了她很久。"},
+ {ch:4,flag:"small",text:"三个小单客户，成了她最稳的现金流转。"}
+];
+const LVAR=[
+ {li:1,idx:1,flag:"brave",t:"哟，这不是开学那天把材料摊了一桌的林同学吗？助学金申请表，填得还是这么熟练呢。"},
+ {li:3,idx:3,flag:"brave",t:"你攥着工资条站在太阳底下——开学敢把材料摊开的人，现在也敢把账本摊开。"},
+ {li:14,idx:5,flag:"jy",t:"好啊。感情是假的，商业间谍是真的。上一次他陷害你，用的是假时间戳——这一次，连套路都懒得换了。"},
+ {li:16,idx:2,flag:"cy",t:"你和程野算什么？连你自己都说不清。书桌上那只铁皮青蛙，还在替他占着一个位置。"},
+ {li:20,idx:3,flag:"ms",t:"青禾？又是这个词。可这次你不再陌生——你刚在妈妈的十二本册子里，见过这个名字的每一种写法。"},
+ {li:22,idx:5,flag:"know",t:"死寂三秒，镁光灯炸成一片白。妈妈……和那个凭《惊鸿》惊艳全国、两年后人间蒸发的天才“青禾”，是同一个人？而老纪手里的那份 2005 年旧报纸，就压在你的证据袋里。"},
+ {li:23,idx:0,flag:"claim",t:"一夜之间，全网吵翻。#青禾女儿# 挂了三天热搜——热评第一，还是你决赛那句“获奖名单上，只写林小满”。贺兰珊资助的营销号带节奏：“手稿墨迹太新，疑似伪造。”“恰饭剧本，建议查税”。"},
+ {li:24,idx:1,flag:"open",t:"博物馆来谈收藏——馆长亲自来的，说直播鉴定那天，他就看中了这批原件。出版社来谈画册，品牌方捧着钱谈联名。樟木箱摆在新工作室正中央——十二册，一册不少。"},
+ {li:26,idx:1,flag:"publish",t:"“曼妮可”找上门谈联名收购。顾曼妮剪了短发，坐在谈判桌主位，开口就砍价四成：“手稿展的热度是挺长——所以我才来。”"},
+ {li:27,idx:1,flag:"small",t:"供应商掺了 30% 化纤混纺，检测报告在热搜挂了一整夜。掉粉五万——还好三家小单老客户第一时间打了预付款，救回了现金流。"},
+ {li:28,idx:2,flag:"mn",t:"她把自己择得干干净净，把脏水泼向妈妈。最后一战，来了。你想起压回去的那份合同——顾曼妮欠你的，这回轮到贺兰珊还。"},
+ {li:29,idx:5,flag:"engaged",t:"（拎着酒站在门口，妆都花了）订婚宴砸场的事，也有我一份。奖学金、江屿、评审的录音——我受够了当棋子，全拿去。"},
+ {li:30,idx:0,flag:"tian",t:"真相全部归位：十二册手稿重新摆进展柜最中央；贺兰珊的名字成了行业反面教材；爸爸第一次喝多了。甜甜在厨房切蛋糕——翻过篇的人，都在用行动还账。"},
+ {li:15,idx:3,relK:"lu",relV:15,t:"雨声很大。手机震了一下——陆之遥的宵夜到了楼下。伞、宵夜、四十分钟的骑行：有人把迟到五年，活成了日常。"},
+ {li:26,idx:3,relK:"gu",relV:-40,t:"姨母姓贺。你们已经交手三轮，她输了三轮——棋子的恨，都是从恐惧开始的。"}
+];
+function branchCond(v){
+ if(v.flag)return !!S.fl[v.flag];
+ if(v.relK){var cv=(S.rel[v.relK]||0);return v.relV<0?cv<=v.relV:cv>=v.relV;}
+ return true;
+}
+function opt4Match(x){
+ if(x.flag&&!S.fl[x.flag])return false;
+ if(x.heFlag&&!S.hidden.includes(x.heFlag))return false;
+ if(x.relK){const v=S.rel[x.relK]||0;if(x.relV<0?v>x.relV:v<x.relV)return false;}
+ return true;
+}
 function initState(){S={st:{m:5,h:6,he:10,f:5},li:0,fl:{},hidden:[],moms:[],rel:{},dry:0};}
 const $=id=>document.getElementById(id);
 const game=$("game"),bars=$("bars");
@@ -853,11 +945,59 @@ function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");
 function setTheme(cls){document.body.className=cls;}
 function setHero(l,r,t,s){$("hLeft").textContent=l;$("hRight").textContent=r;$("hTitle").textContent=t;$("hSub").textContent=s;}
 function setProg(p){$("prog").style.width=Math.round(p*100)+"%";}
-function renderBars(){bars.innerHTML=Object.keys(S.st).map(k=>`<div class="pill" id="pill_${k}">${EMO[k]} ${NAMES[k]}<b>${S.st[k]}</b></div>`).join("");}
+function renderBars(){
+ const ks=Object.keys(S.st);
+ if(bars.children.length===ks.length){
+  ks.forEach(k=>{const b=document.querySelector("#pill_"+k+" b");if(b)b.textContent=S.st[k];});
+  return;
+ }
+ bars.innerHTML=ks.map(k=>`<div class="pill" id="pill_${k}">${EMO[k]} ${NAMES[k]}<b>${S.st[k]}</b></div>`).join("");
+}
 function floatStat(k,v){const p=$("pill_"+k);if(!p)return;const sp=document.createElement("span");sp.className="fl "+(v>0?"up":"dn");sp.textContent=(v>0?"+":"")+v;p.appendChild(sp);setTimeout(()=>sp.remove(),1500);}
 function applyE(e){const out={};for(const k in e){const old=S.st[k];S.st[k]=clamp(S.st[k]+e[k]);const d=S.st[k]-old;if(d!==0){out[k]=d;floatStat(k,d);}}setTimeout(renderBars,420);return out;}
 function relChipsHTML(rel){if(!rel)return"";return Object.keys(rel).map(k=>{const d=rel[k];const nm=CHARS[k]?CHARS[k].name:k;return `<span class="delta rel">🤝 ${nm} 好感 ${d>0?"+":""}${d}</span>`;}).join("");}
 function applyRel(rel){if(!rel)return"";const chips=[];Object.keys(rel).forEach(k=>{S.rel[k]=(S.rel[k]||0)+rel[k];});return relChipsHTML(rel);}
+/* ---- V4: 自动/快进/跳过/回看/已读 ---- */
+var autoMode=false,autoTimer=null;
+function stopEv(e){if(e){e.stopPropagation();if(e.preventDefault)e.preventDefault();}}
+function toggleAuto(){if(!cur||cur.phase!=="dlg")return;autoMode=!autoMode;updAutoBtn();if(autoTimer)clearTimeout(autoTimer);if(autoMode&&!cur.typing)onLineDone();}
+function updAutoBtn(){var b=document.getElementById("autoBtn");if(b)b.classList.toggle("on",autoMode);}
+function stopAuto(){if(autoMode){autoMode=false;updAutoBtn();}if(autoTimer)clearTimeout(autoTimer);}
+function autoAdvance(){if(!cur||cur.phase!=="dlg")return;cur.idx++;if(cur.idx>=cur.effSc.length)endDlg();else renderLine();}
+function onLineDone(){if(autoMode&&cur&&cur.phase==="dlg"){if(autoTimer)clearTimeout(autoTimer);autoTimer=setTimeout(function(){if(autoMode&&cur&&cur.phase==="dlg")autoAdvance();},2000);}}
+function ffLine(){if(cur&&cur.phase==="dlg"&&cur.typing)finishType();}
+function readMap(){try{var m=JSON.parse(localStorage.getItem("rsmn_read"));return(m&&typeof m==="object"&&!Array.isArray(m))?m:{};}catch(e){return{};}}
+function isRead(k){return !!readMap()[k];}
+function skipRead(){
+ if(!cur||cur.phase!=="dlg")return;
+ if(!confirm("将跳过已读内容，遇到未读内容或选项会停下"))return;
+ var snap=readMap();var g=0;
+ while(cur&&cur.phase==="dlg"&&g++<400){
+  if(!snap[S.li+"-"+cur.idx]){if(cur.typing)finishType();toast("已停在未读内容");return;}
+  if(cur.typing)finishType();
+  cur.idx++;
+  if(cur.idx>=cur.effSc.length){endDlg();return;}
+  renderLine();
+  if(cur.typing)finishType();
+ }
+}
+function openLog(){
+ if(!cur)return;
+ var rows=chLog.map(function(x){return '<div class="lrow"><b>'+x.n+'</b><p>'+x.t+'</p></div>';}).join("");
+ openPanel('<div class="ptitle">📜 对话记录</div><div class="lscroll">'+rows+'</div><button class="primary" onclick="closePanel()">关闭</button>');
+ var sc=document.querySelector(".lscroll");if(sc)sc.scrollTop=sc.scrollHeight;
+}
+
+function tendencyHTML(o){
+ let bk=null,bv=0;
+ for(const k in (o.e||{})){if(o.e[k]>0&&o.e[k]>bv){bk=k;bv=o.e[k];}}
+ if(bk)return '偏'+NAMES[bk];
+ let rs=0;for(const k in (o.rel||{}))rs+=o.rel[k];
+ if(rs>=5)return '偏人情';
+ if(rs<=-5)return '伤人情';
+ for(const k in (o.e||{})){if(o.e[k]<0)return '有代价';}
+ return '代价不明';
+}
 function hintHTML(e){return Object.keys(e).map(k=>`<span class="${e[k]>0?'up':'dn'}">${EMO[k]} ${e[k]>0?"+":""}${e[k]}</span>`).join(" · ");}
 function typeInto(el,txt){
  cur.full=txt;cur.typing=true;cur.el=el;cur.pos=0;el.textContent="";
@@ -883,13 +1023,17 @@ function updStage(l){
  if(cur.stage[other])cur.stage[other].act=false;
  drawStage();
 }
-function drawStage(){["L","R"].forEach(k=>{const el=$("st"+k);if(!el)return;const st=cur.stage[k];const im=st&&IMGOK[st.c];el.innerHTML=st?standeeHTML(st.c,st.x):"";el.className="stan "+k.toLowerCase()+(im?" imgmode":"")+(st&&st.act?" act":" dim")+(st&&st.act?(" "+exprCls(st.x)):"");});}
+function drawStage(){["L","R"].forEach(k=>{const el=$("st"+k);if(!el)return;const st=cur.stage[k];const im=st&&PORTRAIT_IMG[st.c]&&!IMG_BAD[st.c];el.innerHTML=st?standeeHTML(st.c,st.x):"";el.className="stan "+k.toLowerCase()+(im?" imgmode":"")+(st&&st.act?" act":" dim")+(st&&st.act?(" "+exprCls(st.x)):"");});}
 function cgHTML(id){
  const g=CGS[id];
- const cast=g.cast.map(pp=>{const im=IMGOK[pp.c];
+ const cast=g.cast.map(pp=>{
+  const im=PORTRAIT_IMG[pp.c]&&!IMG_BAD[pp.c];
+  const cls="stan "+pp.pos.toLowerCase()+" "+(pp.dim?"dim":"act")+(im?" imgmode":"");
   const st=pp.pos==="C"?(im?'style="left:50%;transform:translateX(-50%);height:78%;top:auto;bottom:0;z-index:6"':'style="left:50%;transform:translateX(-50%);width:42%;max-width:235px;z-index:6"'):(im?'style="height:78%;top:auto;bottom:0"':"");
-  return `<div class="stan ${pp.pos} ${pp.dim?"dim":"act"}${im?" imgmode":""}" ${st}>${standeeHTML(pp.c,pp.x)}</div>`;}).join("");
- return `<div class="cbg ${g.bg} ${g.fx==="glow"?"glowbg":""}"></div><div class="props">${propsHTML(g.bg)}</div>${cast}<div class="cgfx"></div><div class="cgframe"></div><div class="cgtitle"><span class="cgk">✦ KEY CG ✦</span><b>${g.title}</b><i>${g.sub}</i></div><div class="cghint">▼ 点击继续</div>`;
+  return `<div class="${cls}" ${st}>${standeeHTML(pp.c,pp.x)}</div>`;
+ }).join("");
+ const gp=(g.props||[]).map(p=>`<span style="left:${p.x}%;top:${p.y}%;font-size:${p.s||26}px">${p.e}</span>`).join("");
+ return `<div class="cbg ${g.bg}"></div><div class="props">${gp}</div>${cast}<div class="cgfx"></div><div class="cgframe"></div><div class="cgtitle"><span class="cgk">✦ KEY CG ✦</span><b>${g.title}</b><i>${g.sub}</i></div><div class="cghint">▼ 点击继续</div>`;
 }
 function showCG(id){
  const g=CGS[id];cur.phase="cg";unlockCG(id);
@@ -898,8 +1042,9 @@ function showCG(id){
  $("cgl").style.display="";$("cgl").className="cg "+(g.fx||"");
 }
 function renderLine(){
- const l=cur.lv.sc[cur.idx];
- if(l.cg){showCG(l.cg);return;}
+ const l=cur.effSc[cur.idx];
+ if(l.cg){markRead("cg-"+S.li+"-"+cur.idx);showCG(l.cg);return;}
+ chLog.push({n:"",t:l.t});
  const isN=l.s==="n",isOS=l.s==="os";
  const cid=isOS?"man":l.c;
  speakTheme(isN?null:cid);
@@ -908,13 +1053,13 @@ function renderLine(){
  markRead();
  const ch=CHARS[cid];
  const nm=isN?"旁白":(isOS?"心声 · 林小满":(l.n||(ch?ch.name:"")));
- if(cur.log)cur.log.push({n:nm||"旁白",t:l.t});
+ chLog.push({n:nm||"旁白",t:l.t});
  const av=(isN||!ch)?"":`<span class="av">${avatar(cid,isOS?"sad":l.x)}</span>`;
  const shy=(l.x==="shy"||(ch&&ch.dex==="shy"))?"😳 ":"";
  const dlg=$("dlg");
  dlg.style.display="";
  dlg.className="dlg"+(isN?" narr":(isOS?" inner":""));
- dlg.innerHTML=`${nm&&nm!=="旁白"?`<span class="tag">${av}<span class="nm">${(isOS?"💭 ":"")+shy}${nm}</span></span>`:""}<span class="dbtns"><button class="dbtn${autoMode?" on":""}" id="autoBtn" onclick="stopEv(event);toggleAuto()">自动</button><button class="dbtn" onclick="stopEv(event);ffLine()">快进</button><button class="dbtn" onclick="stopEv(event);skipRead()">跳过</button><button class="dbtn" onclick="stopEv(event);openLog()">📜</button></span><div class="tx" id="tx"></div><span class="nx">▼</span>`;
+ dlg.innerHTML=`${nm&&nm!=="旁白"?`<span class="tag">${av}<span class="nm">${(isOS?"💭 ":"")+shy}${nm}</span></span>`:""}<span class="dbtns"><button class="dbtn${autoMode?" on":""}" id="autoBtn" onclick="stopEv(event);toggleAuto()">自动</button><button class="dbtn" onclick="stopEv(event);ffLine()">快进</button><button class="dbtn" onclick="stopEv(event);skipRead()">跳过</button><button class="dbtn" onclick="stopEv(event);openLog()" aria-label="对话记录">📜</button></span><div class="tx" id="tx"></div><span class="nx">▼</span>`;
  typeInto($("tx"),l.t);
 }
 function tapScene(){
@@ -932,15 +1077,45 @@ function endDlg(){
  if(cur.hidden){cur.phase="fb";showHiddenFb();return;}
  cur.phase="choice";$("dlg").style.display="none";buildChoices();
 }
+const OPT4=[
+ {li:21,flag:"know",o:{t:"当众翻开那份 2005 年的旧报纸",e:{h:2,f:1,m:-1},rel:{hls:-20,lj:10},mom:"我把 2005 年的旧报纸拍在了评委席上",fb:["你把旧报纸拍在评委席：“2005 年青禾退圈的内情，各位要不要一起看？”全场死寂，贺兰珊的墨镜第一次摘了下来。","她散会后撤掉了你的抄袭指控——猎人的第一次退让，往往意味着第二次扑咬。"]}},
+ {li:27,heFlag:"he3",o:{t:"请许主编做一期深度调查报道",e:{f:2,h:1},rel:{xu:15,hls:-10},mom:"《织物》的深度调查报道出了圈",fb:["《织物》连夜出稿：掺假链条、供应商标价、连三年前的 U 盘旧案都翻了出来——一篇报道，把你两年的账摆在了阳光下。","报道转发破十万。供应商连夜赔付，行业群里再没人敢说“受害者也活该”。"]}},
+ {li:29,relK:"gu",relV:-40,o:{t:"把话筒递给顾曼妮：“该你说了。”",e:{h:2,f:2},rel:{gu:30},mom:"我把话筒递给了顾曼妮",fb:["她愣了十秒，接过话筒讲了十一分钟——从捐楼到雇江屿，讲完哭了。你没安慰，让她自己讲完。","十二年的敌意，今晚变成了十年的惋惜。敌意这个东西，说破就不值钱了。"]}}
+];
+function opt4Match(x){
+ if(x.flag&&!S.fl[x.flag])return false;
+ if(x.heFlag&&!S.hidden.includes(x.heFlag))return false;
+ if(x.relK){const v=S.rel[x.relK]||0;if(x.relV<0?v>x.relV:v<x.relV)return false;}
+ return true;
+}
 function buildChoices(){
  const lv=cur.lv;
- $("chs").innerHTML=`<div class="q">❓ ${lv.q}</div>`+lv.o.map((o,i)=>`<button class="opt ${["pink","blue","gold"][i]}" onclick="pick(${i})"><span class="ot"><span class="num">${"ABC"[i]}</span><span>${o.t}</span></span><span class="hint">后果：${hintHTML(o.e)}${o.rel?" · "+relChipsHTML(o.rel):""}</span></button>`).join("");
+ const extras=OPT4.filter(x=>x.li===S.li&&opt4Match(x)).map(x=>x.o);
+ cur.opts=lv.o.concat(extras);
+ $("chs").innerHTML=`<div class="q">❓ ${lv.q}</div>`+cur.opts.map((o,i)=>`<button class="opt ${["pink","blue","gold","gold"][i]||"gold"}" data-i="${i}" onclick="pick(${i})" aria-label="${i+1}、${o.t}"><span class="ot"><span class="num">${"ABCD"[i]}</span><span>${o.t}</span></span><span class="hint">${settings.hints?("后果："+hintHTML(o.e)+(o.rel?" · "+relChipsHTML(o.rel):"")):("倾向："+tendencyHTML(o))}</span></button>`).join("");
  $("chs").style.display="flex";
 }
 function pick(i){
  if(!cur||cur.phase!=="choice")return;
  cur.phase="fb";
- const o=cur.lv.o[i];
+ const o=cur.opts[i];
+ $("chs").style.display="none";
+ sfx("confirm");
+ const d=applyE(o.e);
+ const sum=Object.keys(d).reduce((a,k)=>a+d[k],0);
+ if(sum>0)sfx("up");else if(sum<0)sfx("dn");
+ if(o.set)for(const k in o.set)S.fl[k]=o.set[k];
+ if(o.mom)S.moms.push(o.mom);
+ const relChips=applyRel(o.rel);
+ const deltas=Object.keys(d).map(k=>`<span class="delta ${d[k]>0?'up':'dn'}">${EMO[k]} ${NAMES[k]} ${d[k]>0?"+":""}${d[k]}</span>`).join("");
+ const flines=(cur.lv.fl||[]).filter(f=>S.fl[f.ifF]).map(f=>`<div class="flagline">${f.t}</div>`).join("");
+ $("fbzone").innerHTML=`<div class="fb"><div class="fbt">🎬 剧情反馈 · 后果揭晓</div>${o.fb.map(t=>`<p>${t}</p>`).join("")}${flines}<div class="deltas">${deltas}${relChips}</div>${cur.lv.hk?`<div class="hook">⚡ ${cur.lv.hk}</div>`:""}<button class="primary" onclick="afterFb()" aria-label="继续下一关">继续 ▶</button></div>`;
+ setTimeout(()=>{const el=document.querySelector(".fb");if(el&&el.scrollIntoView)el.scrollIntoView({behavior:"smooth",block:"nearest"});},60);
+}
+function pick(i){
+ if(!cur||cur.phase!=="choice")return;
+ cur.phase="fb";
+ const o=cur.opts[i];
  $("chs").style.display="none";
  sfx("confirm");
  const d=applyE(o.e);
@@ -951,7 +1126,7 @@ function pick(i){
  const relChips=applyRel(o.rel);
  if(S.st.he<=5&&!S.fl._warnHe){S.fl._warnHe=1;toast("⚠ 健康≤5：身体开始记账了，代价会在结局结算");}
  const rsum=Object.keys(S.rel).reduce((a,k)=>a+S.rel[k],0);
- if(rsum<=-80&&!S.fl._warnRel){S.fl._warnRel=1;toast("⚠ 得罪的人比帮你的多了：结局会清算这笔账");}
+ if(rsum<=-60&&!S.fl._warnRel){S.fl._warnRel=1;toast("⚠ 得罪的人比帮你的多了：结局会清算这笔账");}
  const deltas=Object.keys(d).map(k=>`<span class="delta ${d[k]>0?'up':'dn'}">${EMO[k]} ${NAMES[k]} ${d[k]>0?"+":""}${d[k]}</span>`).join("");
  const flines=(cur.lv.fl||[]).filter(f=>S.fl[f.ifF]).map(f=>`<div class="flagline">${f.t}</div>`).join("");
  $("fbzone").innerHTML=`<div class="fb"><div class="fbt">🎬 剧情反馈 · 后果揭晓</div>${o.fb.map(t=>`<p>${t}</p>`).join("")}${flines}<div class="deltas">${deltas}${relChips}</div>${cur.lv.hk?`<div class="hook">⚡ ${cur.lv.hk}</div>`:""}<button class="primary" onclick="afterFb()">继续 ▶</button></div>`;
@@ -970,21 +1145,25 @@ function showChapter(ci){
 function showLevel(){const l=LEVELS[S.li];showLevelData(l,false);}
 function showLevelData(lv,hidden){
  if(cur&&cur.timer)clearInterval(cur.timer);
- cur={lv:lv,hidden:!!hidden,idx:0,phase:"dlg",typing:false,timer:null,stage:{L:null,R:null},full:"",log:[]};
+ chLog=[];chLogCi=-1;
+ cur={lv:lv,hidden:!!hidden,idx:0,phase:"dlg",typing:false,timer:null,stage:{L:null,R:null},full:"",effSc:null};
  const ch=DATA[lv.ci];
  setTheme("th"+(lv.ci+1));
  if(hidden){setHero(`第 ${ch.no} 章 ·《${ch.name}》`,`隐藏事件 · ${lv.a} 岁`,"✨ "+lv.tt,"命运偏爱留意细节的人");game.innerHTML=`<div class="card hevt"><div style="text-align:center;padding:2px 0 6px"><span class="tagh">✨ 隐藏事件 ${S.hidden.length}/5 · 随机触发</span><div style="font-size:21px;font-weight:900;margin-top:8px">${lv.tt}</div></div>${sceneHTML(lv)}<div id="fbzone"></div></div>`;}
  else{setHero(`第 ${ch.no} 章 ·《${ch.name}》`,`第 ${S.li+1}/${LEVELS.length} 关 · ${lv.a} 岁`,`${ch.em} ${lv.tt}`,ch.sub);setProg(S.li/LEVELS.length);game.innerHTML=`<div class="card"><div class="stage">${lv.tt} · ${lv.a} 岁</div>${sceneHTML(lv)}<div id="fbzone"></div></div>`;}
+ cur.effSc=lv.sc.slice();
+ LVAR.forEach(v=>{if(v.li===S.li&&branchCond(v)&&cur.effSc[v.idx])cur.effSc[v.idx]=Object.assign({},cur.effSc[v.idx],{t:v.t});});
  renderLine();
  window.scrollTo({top:0,behavior:"smooth"});
 }
 function sceneHTML(lv){
- return `<div class="scene fadin" id="scn" onclick="tapScene()"><div class="bg ${lv.bg}"></div><div class="props">${propsHTML(lv.bg)}</div><div class="stan l" id="stL"></div><div class="stan r" id="stR"></div><div class="dlg" id="dlg" style="display:none"></div><div class="choices" id="chs" style="display:none"></div><div class="cg" id="cgl" style="display:none"></div></div>`;
+ return `<div class="scene fadin" id="scn" onclick="tapScene()" role="button" aria-label="点击推进对话" aria-keyshortcuts="Space Enter"><div class="bg ${lv.bg}"></div><div class="props">${propsHTML(lv.bg)}</div><div class="stan l" id="stL"></div><div class="stan r" id="stR"></div><div class="dlg" id="dlg" style="display:none"></div><div class="choices" id="chs" style="display:none"></div><div class="cg" id="cgl" style="display:none"></div></div>`;
 }
 /* ---- 隐藏事件 ---- */
 function showHidden(ev){
  S.hidden.push(ev.id);S.fl[ev.id]=1;S.dry=0;
  const lv={tt:ev.name,ci:LEVELS[S.li].ci,a:LEVELS[S.li].a,bg:ev.bg,sc:ev.sc,rel:ev.rel,e:ev.e};
+ markRead("he-"+ev.id);
  showLevelData(lv,true);
 }
 function showHiddenFb(){
@@ -1000,11 +1179,14 @@ function afterFb(){
  if(S.li>=LEVELS.length){showEnd();return;}
  saveTo("auto");
  const nxt=LEVELS[S.li],prev=LEVELS[S.li-1];
- const pool=HIDDEN.filter(h=>!S.hidden.includes(h.id)&&nxt.a>=h.min&&nxt.a<=h.max);
+ const agePool=HIDDEN.filter(h=>!S.hidden.includes(h.id)&&nxt.a>=h.min&&nxt.a<=h.max&&S.li>=h.after);
+ const condHit=agePool.find(h=>h.cond&&h.cond(S));
  const crossing=prev&&prev.ci!==nxt.ci;
- const fire=(pool.length>0)&&(Math.random()<0.09||S.dry>=12||(crossing&&S.hidden.length<2));
- if(fire){const ev=pool[Math.floor(Math.random()*pool.length)];showHidden(ev);}
- else goNext();
+ let ev=null;
+ if(condHit)ev=condHit;
+ else if(agePool.length>0&&(Math.random()<0.09||S.dry>=12||(crossing&&S.hidden.length<2)))ev=agePool[Math.floor(Math.random()*agePool.length)];
+ if(ev){showHidden(ev);return;}
+ goNext();
 }
 function goNext(){
  if(S.li>=LEVELS.length){showEnd();return;}
@@ -1014,25 +1196,33 @@ function goNext(){
 /* ---- 开始/结局 ---- */
 function showStart(){
  viewTag="start";setTheme("th1");setHero("✦ 人生重开 · 橙光短剧版","18 → 30 岁","🎲 她的三十而立","一个贫困生女孩的 12 年，和一个迟到 20 年的秘密");setProg(0);renderBars();
- game.innerHTML=`<div class="start"><div class="tag2">· 橙光式剧情人生游戏 ·</div><h2>她的三十而立</h2>${castRow(["man","gu","lw","hls","cheng"])}<div class="feats"><span class="feat">5 章 31 关</span><span class="feat">93 个选择</span><span class="feat">11 张关键 CG</span><span class="feat">9 条结局</span><span class="feat">5 个隐藏事件</span><span class="feat">好感系统</span></div><p>她是林小满，18 岁，普通家庭，全校都知道的"贫困生"。<br>奖学金有人抢、方案有人偷、男友有人雇、连妈妈的遗物都有人惦记。<br>但没人知道——她妈妈留下的那只旧樟木箱里，锁着一个足以震动整个行业的名字。这个秘密，要到她 26 岁那年才会炸开。<br><br>💰 钱包 · 😊 快乐 · 💪 健康 · 👥 人脉，四条数值 + 人物好感，决定你的结局；大多数选择都有代价，没有稳赢的路。</p><button class="primary" onclick="startGame()">▶ 开始我的人生</button><button class="ghost${hasAnySave()?"":" dis"}" ${hasAnySave()?"":"disabled"} onclick="continueGame()">📂 继续游戏</button><button class="ghost" onclick="openChapters()">📖 章节选择</button><button class="ghost" onclick="openGallery()">🖼️ CG 鉴赏</button><button class="ghost" onclick="openSettings()">⚙️ 设置</button></div>`;
+ game.innerHTML=`<div class="start"><div class="tag2">· 橙光式剧情人生游戏 ·</div><h2>她的三十而立</h2>${castRow(["man","gu","lw","hls","cheng"])}<div class="feats"><span class="feat">5 章 31 关</span><span class="feat">93+ 选择</span><span class="feat">11 张关键 CG</span><span class="feat">9 条结局</span><span class="feat">5 个隐藏事件</span><span class="feat">好感系统</span></div><p>她是林小满，18 岁，普通家庭，全校都知道的"贫困生"。<br>奖学金有人抢、方案有人偷、男友有人雇、连妈妈的遗物都有人惦记。<br>而她妈妈留下的那些旧东西里，藏着一段没人提起的往事。<br><br>💰 钱包 · 😊 快乐 · 💪 健康 · 👥 人脉，四条数值 + 人物好感，决定你的结局；大多数选择都有代价，没有稳赢的路。</p><button class="primary" onclick="startGame()">▶ 开始我的人生</button><button class="ghost${hasAnySave()?"":" dis"}" ${hasAnySave()?"":"disabled"} onclick="continueGame()">📂 继续游戏</button><button class="ghost" onclick="openChapters()">📖 章节选择</button><button class="ghost" onclick="openGallery()">🖼️ CG 鉴赏</button><button class="ghost" onclick="openStats()">📊 数值面板</button><button class="ghost" onclick="openSettings()">⚙️ 设置</button></div>`;
+}
+function openStats(){
+ var top=Object.entries(S.rel).sort(function(a,b){return Math.abs(b[1])-Math.abs(a[1]);}).slice(0,3);
+ var relHtml=top.length?top.map(function(kv){var nm=CHARS[kv[0]]?CHARS[kv[0]].name:kv[0];return '<div class="statrow"><span>'+nm+'</span><b class="'+(kv[1]>=0?'up':'dn')+'">'+(kv[1]>0?'+':'')+kv[1]+'</b></div>';}).join(""):"<div class='statrow'><span>暂无</span></div>";
+ var lv=LEVELS[Math.min(S.li,LEVELS.length-1)],ch=DATA[lv.ci];
+ var brand=S.fl.brand==="qh"?"重启青禾":S.fl.brand==="xm"?"只做小满":S.fl.brand==="qx"?"青禾·小满双线":"未定";
+ openPanel('<div class="ptitle">📊 人生数值</div><div class="stgrid">'+Object.keys(S.st).map(function(k){return '<div class="stcell">'+EMO[k]+' '+NAMES[k]+'<b>'+S.st[k]+'</b></div>';}).join("")+'</div><div class="ptitle" style="margin-top:10px">🤝 好感变化前三</div>'+relHtml+'<div class="statrow" style="margin-top:8px"><span>当前进度</span><b>第'+ch.no+'章 · '+lv.tt+'</b></div><div class="statrow"><span>品牌路线</span><b>'+brand+'</b></div><div class="statrow"><span>✨ 隐藏事件</span><b>'+S.hidden.length+'/5</b></div><button class="primary" onclick="closePanel()">关闭</button>');
 }
 function startGame(){showChapter(0);}
+function relSumOf(r){let s=0;for(const k in (r||{}))s+=r[k];return s;}
 function calcEnd(){
- const ctx={st:S.st,fl:S.fl,hc:S.hidden.length,rel:S.rel};
+ const ctx={st:S.st,fl:S.fl,hc:S.hidden.length,rel:S.rel||{},relSum:relSumOf(S.rel)};
  const byId=id=>ENDINGS.find(e=>e.id===id);
- for(const id of ["e3","e9"]){const e=byId(id);if(e.cond(ctx))return e;}
- for(const id of ["e1","e2"]){const e=byId(id);if(e.cond(ctx))return e;}
+ for(const id of ["e9","e1","e2"]){const e=byId(id);if(e.cond(ctx))return e;}
  {const e=byId("e4");if(e.cond(ctx))return e;}
  const scores=[];
- if(S.st.m>=23)scores.push({e:byId("e5"),w:(S.st.m-23)/23});
- if(S.st.f>=20)scores.push({e:byId("e6"),w:(S.st.f-20)/20});
- if(S.st.h>=22)scores.push({e:byId("e7"),w:(S.st.h-22)/22});
+ if(S.st.m>=23)scores.push({e:byId("e5"),w:(S.st.m-23)/7});
+ if(S.st.f>=20)scores.push({e:byId("e6"),w:(S.st.f-20)/10});
+ if(S.st.h>=22)scores.push({e:byId("e7"),w:(S.st.h-22)/8});
  if(scores.length){scores.sort((a,b)=>b.w-a.w);return scores[0].e;}
+ if(byId("e3").cond(ctx))return byId("e3");
  return byId("e8");
 }
 function showEnd(){
  const e=calcEnd();setTheme("thE");
- setHero("🎬 全剧终","30 岁生日夜","🎊 她的三十而立","从 18 岁到 30 岁，12 年，31 个选择，一个真相");setProg(1);renderBars();
+ setHero("🎬 全剧终","30 岁生日夜","🎊 她的三十而立","从 18 岁到 30 岁，12 年，31 关 · 93 个选择点，一个真相");setProg(1);renderBars();
  const n=S.hidden.length;
  const hlist=HIDDEN.map(h=>S.hidden.includes(h.id)?`${h.em} ${h.name} ✓`:"❓ ？？？").map(t=>`<div class="hi">${t}</div>`).join("");
  const rem=5-n;
@@ -1059,7 +1249,68 @@ function fallbackCopy(t,done){
  try{document.execCommand("copy");done();}catch(e){toast("复制失败，请手动截图海报 📸");}
  ta.remove();
 }
-function restart(){initState();showStart();window.scrollTo({top:0,behavior:"smooth"});}
+function restart(){try{localStorage.removeItem("rsmn_save_auto")}catch(e){} initState();showStart();window.scrollTo({top:0,behavior:"smooth"});}
+/* ---- A5: 结局覆盖自测（console 调 window.__selfTest()） ---- */
+window.__selfTest=function(runs){
+ runs=runs||10000;
+ var strat={
+  e1:function(l){var bi=0,best=-1e9;l.o.forEach(function(o,i){var s=(o.e.f||0)*2+(o.e.m||0)+((o.rel&&o.rel.lj)||0)*3+((o.rel&&o.rel.lw)||0)*3;if(i===0||s>best){best=s;bi=i;}});return bi;},
+  e2:function(l){var bi=0,best=-1e9;l.o.forEach(function(o,i){var s=(o.e.f||0)+((o.rel&&o.rel.lw)||0)*2+((o.set&&(o.set.publish||o.set.brand))?60:0);if(i===0||s>best){best=s;bi=i;}});return bi;},
+  e3:function(l){var bi=0,best=1e9;l.o.forEach(function(o,i){var s=(o.e.he||0)*3+(o.e.f||0)+(o.e.m||0);if(i===0||s<best){best=s;bi=i;}});return bi;},
+  e4:function(l){if(l.o[2]&&l.o[2].t.indexOf("都不选")>=0)return 2;var bi=0,best=-1e9;l.o.forEach(function(o,i){var s=(o.e.h||0);if(i===0||s>best){best=s;bi=i;}});return bi;},
+  e5:function(l){var bi=0,best=-1e9;l.o.forEach(function(o,i){var s=(o.e.m||0);if(i===0||s>best){best=s;bi=i;}});return bi;},
+  e6:function(l){var bi=0,best=-1e9;l.o.forEach(function(o,i){var s=(o.e.f||0);if(i===0||s>best){best=s;bi=i;}});return bi;},
+  e7:function(l){var bi=0,best=-1e9;l.o.forEach(function(o,i){var s=(o.e.h||0);if(i===0||s>best){best=s;bi=i;}});return bi;},
+  e8:function(l){var bi=0,best=1e9;l.o.forEach(function(o,i){var rs=0;if(o.rel)for(var k in o.rel)rs+=o.rel[k];var s=Math.abs(o.e.m||0)+Math.abs(o.e.h||0)+Math.abs(o.e.he||0)+Math.abs(o.e.f||0)+Math.abs(rs)/2;if(i===0||s<best){best=s;bi=i;}});return bi;},
+  e9:function(l){var bi=0,best=-1e9;l.o.forEach(function(o,i){var rs=0;if(o.rel)for(var k in o.rel)rs+=o.rel[k];var s=(o.e.m||0)*2-rs;if(i===0||s>best){best=s;bi=i;}});return bi;}
+ };
+ function drainNow(){var g=0;while(cur&&(cur.phase==='dlg'||cur.phase==='cg')&&g++<60)tapScene();if(cur&&cur.phase==='fb')goNext();}
+ function play(id){
+  initState();var guard=0;
+  while(S.li<LEVELS.length&&guard++<400){
+   if(!cur){showLevel();continue;}
+   drainNow();
+   if(!cur||cur.phase!=='choice')continue;
+   var l=LEVELS[S.li];var idx=strat[id](l);
+   pick(Math.min(idx,cur.opts.length-1));afterFb();
+  }
+  return calcEnd().id;
+ }
+ var out={deterministic:{},random:{},issues:[]};
+ ENDINGS.forEach(function(e){
+  var id=e.id;initState();var guard=0;var got=null;
+  while(S.li<LEVELS.length&&guard++<400){
+   if(!cur){showLevel();continue;}
+   drainNow();
+   if(!cur||cur.phase!=='choice')continue;
+   var l=LEVELS[S.li];var idx=strat[id](l);
+   pick(Math.min(idx,cur.opts.length-1));afterFb();
+  }
+  got=calcEnd().id;
+  out.deterministic[id]=got;
+  if(got!==id)out.issues.push("确定性路径 "+id+" 实得 "+got);
+ });
+ initState();
+ var dist={};
+ for(var i=0;i<runs;i++){
+  initState();var guard=0;
+  while(S.li<LEVELS.length&&guard++<400){
+   if(!cur){showLevel();continue;}
+   drainNow();
+   if(!cur||cur.phase!=='choice')continue;
+   pick(Math.floor(Math.random()*cur.opts.length));afterFb();
+  }
+  var id=calcEnd().id;dist[id]=(dist[id]||0)+1;
+ }
+ out.random=dist;
+ ENDINGS.forEach(function(e){
+  var id=e.id;var pct=(dist[id]||0)/runs*100;
+  if(id!=='e8'&&pct<2)out.issues.push("随机占比 "+id+"="+pct.toFixed(1)+"% <2%");
+ });
+ out.hiddenNote="5 个隐藏事件为条件触发（HIDDEN[].cond），确定性集齐路径见变更说明";
+ console.log("%c__selfTest","color:#ffd982;font-weight:bold",out);
+ return out;
+};
 
 /* ================= 音乐 + 音效系统（真 mp3；缺文件时明确提示，不用合成音顶替；短音效保留） ================= */
 const BGM_FILES={man:"xiaoman",lw:"liangwei",tian:"tiantian",hls:"helanshan"};
@@ -1075,15 +1326,21 @@ function ac(){
  if(AC){
   if(AC.state==="suspended"){try{AC.resume();}catch(e){}}
   if(!sfxGain){sfxGain=AC.createGain();sfxGain.connect(AC.destination);}
-  sfxGain.gain.value=curVol()/2;
+  sfxGain.gain.value=settings.sfxOn&&settings.vol>0?0.21:0;
  }
  return AC;
 }
 function applyVolumes(){
- if(sfxGain)sfxGain.gain.value=curVol()/2;
+ if(sfxGain)sfxGain.gain.value=settings.sfxOn&&settings.vol>0?0.21:0;
  const a=bgmCur?getBgm(bgmCur):null;if(a&&!a._ft){try{a.volume=curVol();}catch(e){}}
 }
 function missToast(){if(!missToastShown){toast("音乐文件缺失，请检查 assets/bgm/");missToastShown=true;}}
+
+function applyFont(){document.documentElement.style.setProperty("--dlgfont",settings.font+"px");}
+function v3(v,l){var b=document.createElement("button");b.className="setb"+(settings.sfxOn===v?" on":"");b.textContent=l;b.onclick=function(){setSfx(v)};return b.outerHTML;}
+function v4(v,l){var b=document.createElement("button");b.className="setb"+(settings.hints===v?" on":"");b.textContent=l;b.onclick=function(){setHints(v)};return b.outerHTML;}
+function setSfx(v){settings.sfxOn=v;saveSettings();applyVolumes();toast(v?"音效已开启":"音效已关闭");}
+function setHints(v){settings.hints=v;saveSettings();toast(v?"将显示具体后果":"将只显示倾向");if(cur&&cur.phase==="choice")buildChoices();}
 /* ---- 文件音乐 ---- */
 function getBgm(id){
  if(bgmPool[id]!==undefined)return bgmPool[id];
@@ -1102,7 +1359,7 @@ function fadeTo(a,vol,ms){
 /* ---- 播放调度 ---- */
 function playMusic(name){
  const a=getBgm(name);
- if(a){try{a.volume=0;a.play().then(()=>{fadeTo(a,curVol(),900);}).catch(()=>{missToast();});}catch(e){missToast();}}
+ if(a){try{if(!a.paused){fadeTo(a,curVol(),900);}else{a.volume=0;a.play().then(()=>{fadeTo(a,curVol(),900);}).catch(()=>{missToast();});}}catch(e){missToast();}}
  else missToast();
 }
 function speakTheme(cid){
@@ -1115,28 +1372,30 @@ function speakTheme(cid){
  if(!bgmOn||curVol()===0)return;
  playMusic(name);
 }
-function unlockAudio(){
- if(unlocked){ac();return;}
- unlocked=true;ac();
- const h=$("sndHint");if(h)h.style.display="none";
- bgmOn=true;applyVolumes();$("sndBtn").textContent="🔊";
- bgmCur=bgmWant||"general";
- playMusic(bgmCur);
- toast(getBgm(bgmCur)?"音乐已开启 🎵":"音乐文件缺失，请检查 assets/bgm/");
+function ensureAudio(){
+ if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}
+ if(AC&&AC.state==="suspended"){try{AC.resume();}catch(e){}}
+ if(AC&&sfxGain)sfxGain.gain.value=settings.sfxOn&&settings.vol>0?0.21:0;
+ return AC;
 }
-document.addEventListener("pointerdown",function once(e){if(e&&e.target&&e.target.id==="sndBtn")return;unlockAudio();document.removeEventListener("pointerdown",once);},{once:false});
+document.addEventListener("pointerdown",function once(e){if(e&&e.target&&e.target.id==="sndBtn")return;ensureAudio();document.removeEventListener("pointerdown",once);},{once:false});
 function toggleSound(ev){
  if(ev){ev.stopPropagation();if(ev.preventDefault)ev.preventDefault();}
- if(!unlocked){unlockAudio();return;}
+ ensureAudio();
+ if(!bgmStarted){
+  bgmStarted=true;bgmOn=true;$("sndBtn").textContent="🔊";applyVolumes();
+  playMusic(bgmCur||bgmWant||"general");
+  toast(getBgm(bgmCur||"general")?"音乐已开启 🎵":"音乐文件缺失，请检查 assets/bgm/");
+  return;
+ }
  bgmOn=!bgmOn;
  $("sndBtn").textContent=bgmOn?"🔊":"🔈";
  applyVolumes();
- if(bgmOn){playMusic(bgmCur||bgmWant||"general");toast(getBgm(bgmCur||"general")?"音乐已开启 🎵":"音乐文件缺失，请检查 assets/bgm/");}
- else{const a=bgmCur?getBgm(bgmCur):null;if(a)fadeTo(a,0,300);}
+ if(bgmOn){playMusic(bgmCur||bgmWant||"general");toast("音乐已开启 🎵");}
+ else{const a=bgmCur?getBgm(bgmCur):null;if(a)fadeTo(a,0,300);toast("音乐已关闭");}
 }
-/* ---- 音效（第 13 项）：合成短音，音量为音乐一半 ---- */
 function sfx(kind){
- if(!bgmOn||curVol()===0)return;const c=ac();if(!c||!sfxGain)return;
+ if(!settings.sfxOn||settings.vol===0)return;const c=ensureAudio();if(!c||!sfxGain)return;
  try{
   const beep=(f,T,d,g,type)=>{const o=c.createOscillator(),gn=c.createGain();o.type=type||"sine";o.frequency.value=f;gn.gain.setValueAtTime(0,T);gn.gain.linearRampToValueAtTime(g,T+0.01);gn.gain.linearRampToValueAtTime(0,T+d);o.connect(gn);gn.connect(sfxGain);o.start(T);o.stop(T+d+0.02);};
   const slide=(f1,f2)=>{const T=c.currentTime,o=c.createOscillator(),gn=c.createGain();o.type="sine";o.frequency.setValueAtTime(f1,T);o.frequency.linearRampToValueAtTime(f2,T+0.18);gn.gain.setValueAtTime(0,T);gn.gain.linearRampToValueAtTime(0.07,T+0.02);gn.gain.linearRampToValueAtTime(0,T+0.2);o.connect(gn);gn.connect(sfxGain);o.start(T);o.stop(T+0.25);};
@@ -1173,13 +1432,52 @@ function openSavePanel(){
  html+=`<button class="primary" onclick="closePanel()">关闭</button>`;
  openPanel(html);
 }
+function chStartKey(ci){return "rsmn_chstart_"+ci;}
+function openChapters(){
+ var reached={};try{reached=JSON.parse(localStorage.getItem("rsmn_reached")||"{}");}catch(e){}
+ var html=DATA.map(function(ch,ci){
+  var ok=ci===0||!!reached["c"+ci];
+  var cls=ok?"chbtn":"chbtn lock";
+  var dis=ok?"":" disabled";
+  return "<button class="+cls+dis+" onclick=\"gotoChapter("+ci+")\">"+ch.em+" 第"+ch.no+"章"+ch.name+" <span>"+ch.ages+(ok?"":" \ud83d\udc12")+"</span></button>";
+ }).join("");
+ openPanel(html+"<button class=\"primary\" onclick=\"closePanel()\">关闭</button>");
+}
+function gotoChapter(ci){
+ var d=null;try{d=JSON.parse(localStorage.getItem(chStartKey(ci)));}catch(e){}
+ initState();
+ if(d&&d.st){S.st=d.st;S.fl=d.fl||{};S.hidden=d.hidden||[];S.moms=d.moms||[];S.rel=d.rel||{};S.dry=d.dry||0;}
+ S.li=LEVELS.length-1;
+ for(var i=0;i<LEVELS.length;i++){if(LEVELS[i].ci===ci){S.li=i;break;}}
+ cur=null;chLog=[];chLogCi=-1;closePanel();renderBars();
+ if(S.li>=LEVELS.length){showEnd();return;}
+ showLevel();
+}
+function unlockCG(id){try{var l=JSON.parse(localStorage.getItem("rsmn_cg")||"[]");if(!l.includes(id)){l.push(id);localStorage.setItem("rsmn_cg",JSON.stringify(l));}}catch(e){}}
+function cgList(){try{var l=JSON.parse(localStorage.getItem("rsmn_cg")||"[]");return Array.isArray(l)?l:[];}catch(e){return[];}}
+function openGallery(){
+ var un=cgList();
+ var cells=Object.keys(CGS).map(function(id){
+  if(un.includes(id))return "<button class='gcell' onclick='viewCG(\""+id+"\")'><span class='gthumb "+CGS[id].bg+"'>\u2728</span><span class='gname'>"+CGS[id].title+"</span></button>";
+  return "<div class='gcell lock'><span class='gthumb glocked'>\ud83d\udc12</span><span class='gname'>未解锁</span></div>";
+ }).join("");
+ openPanel("<div class='ptitle'>🖼️ CG 鉴赏（"+un.length+"/"+Object.keys(CGS).length+"）</div><div class='ggrid'>"+cells+"</div><button class=\"primary\" onclick=\"closePanel()\">关闭</button>");
+}
+function viewCG(id){
+ var g=CGS[id];
+ openPanel("<div class='ptitle'>"+g.title+"</div><div class='cgview'>"+cgHTML(id)+"</div><button class=\"primary\" onclick=\"closePanel()\">关闭</button>");
+}
 function doSave(slot){
  const p=peekSave(slot);
  if(p.d&&!confirm("该存档位已有进度，确定覆盖吗？"))return;
  if(saveTo(slot)){toast("已存档 ✓");openSavePanel();}
  else toast("存档失败（存储不可用）");
 }
-function doLoad(slot){const p=peekSave(slot);if(!p.d)return;applySave(p.d);toast("已读档 ✓");}
+function doLoad(slot){
+ const p=peekSave(slot);if(!p.d)return;
+ if((S.li>0||S.dry>0||S.moms.length)&&!confirm("读档将覆盖当前进度，确定吗？"))return;
+ applySave(p.d);toast("已读档 ✓");
+}
 function doDel(slot){if(!confirm("确定删除这个存档吗？"))return;try{localStorage.removeItem("rsmn_save_"+slot);}catch(e){}openSavePanel();}
 function applySave(d){
  initState();S.st={...d.st};S.li=Math.min(Math.max(0,d.li),LEVELS.length-1);S.fl=d.fl||{};S.hidden=d.hidden||[];S.moms=d.moms||[];S.rel=d.rel||{};S.dry=d.dry||0;
@@ -1190,78 +1488,13 @@ function hasAnySave(){for(const s of["auto","1","2","3"]){const p=peekSave(s);if
 function latestSave(){let best=null;for(const s of["auto","1","2","3"]){const p=peekSave(s);if(p.d&&(!best||p.d.time>best.d.time))best=p;}return best;}
 function continueGame(){const b=latestSave();if(!b){toast("还没有存档，先开始一段人生吧");return;}applySave(b.d);}
 /* ---- 章节选择（第 5 项） ---- */
-function markReached(li){try{const r=JSON.parse(localStorage.getItem("rsmn_reached")||"{}");r["c"+LEVELS[Math.min(Math.max(0,li),LEVELS.length-1)].ci]=1;localStorage.setItem("rsmn_reached",JSON.stringify(r));}catch(e){}}
-function chStartKey(ci){return "rsmn_chstart_"+ci;}
-function openChapters(){
- let reached={};try{reached=JSON.parse(localStorage.getItem("rsmn_reached")||"{}");}catch(e){}
- let html=`<div class="ptitle">📖 章节选择</div>`;
- DATA.forEach((ch,ci)=>{
-  const ok=ci===0||!!reached["c"+ci];
-  html+=`<button class="chbtn${ok?"":" lock"}" ${ok?`onclick="gotoChapter(${ci})"`:"disabled"}>${ch.em} 第${ch.no}章《${ch.name}》<span>${ch.ages}${ok?"":" · 🔒"}</span></button>`;
- });
- html+=`<button class="primary" onclick="closePanel()">关闭</button>`;
- openPanel(html);
+function markReached(ci){
+ ci=Math.max(0,Math.min(ci,DATA.length-1));
+ try{const r=JSON.parse(localStorage.getItem("rsmn_reached")||"{}");r["c"+ci]=1;localStorage.setItem("rsmn_reached",JSON.stringify(r));}catch(e){}
 }
-function gotoChapter(ci){
- let d=null;try{d=JSON.parse(localStorage.getItem(chStartKey(ci)));}catch(e){}
- initState();
- if(d&&d.st){S.st={...d.st};S.fl=d.fl||{};S.hidden=d.hidden||[];S.moms=d.moms||[];S.rel=d.rel||{};S.dry=d.dry||0;}
- S.li=LEVELS.findIndex(l=>l.ci===ci);if(S.li<0)S.li=0;
- cur=null;closePanel();renderBars();showLevel();
+function markRead(key){
+ try{const k=key||(S.li+"-"+cur.idx);const m=readMap();if(!m[k]){m[k]=1;localStorage.setItem("rsmn_read",JSON.stringify(m));}}catch(e){}
 }
-/* ---- 设置面板（第 7 项） ---- */
-function openSettings(){
- const f=(v,l)=>`<button class="setb${settings.font===v?" on":""}" onclick="setFont(${v})">${l}</button>`;
- const s=(v,l)=>`<button class="setb${settings.speed===v?" on":""}" onclick="setSpeed(${v})">${l}</button>`;
- const v2=(val,l)=>`<button class="setb${settings.vol===val?" on":""}" onclick="setVol(${val})">${l}</button>`;
- openPanel(`<div class="ptitle">⚙️ 设置</div>
- <div class="setrow"><span>文字大小</span>${f(14,"小")}${f(16,"中")}${f(18,"大")}</div>
- <div class="setrow"><span>打字速度</span>${s(40,"慢")}${s(16,"中")}${s(6,"快")}</div>
- <div class="setrow"><span>音乐音量</span>${v2(0,"关")}${v2(0.2,"低")}${v2(0.42,"中")}</div>
- <button class="primary" onclick="closePanel()">关闭</button>`);
-}
-function setFont(v){settings.font=v;saveSettings();applyFont();}
-function setSpeed(v){settings.speed=v;saveSettings();toast("打字速度已调整");}
-function setVol(v){settings.vol=v;saveSettings();applyVolumes();if(bgmOn&&bgmCur){const a=getBgm(bgmCur);if(a){if(a._ft){clearInterval(a._ft);a._ft=null;}try{a.volume=curVol();}catch(e){}}}toast(v===0?"音量：关":"音量已调整");}
-function applyFont(){document.documentElement.style.setProperty("--dlgfont",settings.font+"px");}
-/* ---- 数值面板（第 8 项） ---- */
-function openStats(){
- const top=Object.entries(S.rel).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,3);
- const relHtml=top.length?top.map(kv=>`<div class="statrow"><span>${CHARS[kv[0]]?CHARS[kv[0]].name:kv[0]}</span><b class="${kv[1]>=0?"up":"dn"}">${kv[1]>0?"+":""}${kv[1]}</b></div>`).join(""):"<div class='statrow'><span>暂无</span></div>";
- const lv=LEVELS[Math.min(S.li,LEVELS.length-1)],ch=DATA[lv.ci];
- openPanel(`<div class="ptitle">📊 人生数值</div>
- <div class="stgrid">${Object.keys(S.st).map(k=>`<div class="stcell">${EMO[k]} ${NAMES[k]}<b>${S.st[k]}</b></div>`).join("")}</div>
- <div class="ptitle" style="margin-top:10px">🤝 好感变化前三</div>${relHtml}
- <div class="statrow" style="margin-top:8px"><span>当前进度</span><b>第${ch.no}章 · ${lv.tt}</b></div><div class="statrow"><span>✨ 隐藏事件</span><b>${S.hidden.length}/5</b></div>${S.hidden.length?`<div style="font-size:12px;color:#8a81a3;margin:2px 4px 6px">已收录：${S.hidden.map(id=>{const hh=HIDDEN.find(x=>x.id===id);return hh?hh.em+hh.name:id;}).join("、")}</div>`:""}${(()=>{const elig=HIDDEN.filter(x=>!S.hidden.includes(x.id)&&lv.a>=x.min&&lv.a<=x.max);return elig.length?`<div style="font-size:12px;color:#b89fd6;margin:2px 4px 6px">这个年纪，你可能还会遇见：${elig.map(x=>x.em+x.name).join("、")}</div>`:"";})()}
- <button class="primary" onclick="closePanel()">关闭</button>`);
-}
-/* ---- CG 鉴赏（第 11 项） ---- */
-function cgList(){try{const l=JSON.parse(localStorage.getItem("rsmn_cg")||"[]");return Array.isArray(l)?l:[];}catch(e){return[];}}
-function unlockCG(id){try{const l=cgList();if(!l.includes(id)){l.push(id);localStorage.setItem("rsmn_cg",JSON.stringify(l));}}catch(e){}}
-function openGallery(){
- const un=cgList();
- let html=`<div class="ptitle">🖼️ CG 鉴赏（${un.length}/${Object.keys(CGS).length}）</div><div class="ggrid">`;
- Object.keys(CGS).forEach(id=>{
-  if(un.includes(id))html+=`<button class="gcell" onclick="viewCG('${id}')"><span class="gthumb ${CGS[id].bg}"><span class="gemoji">${CGS[id].props[0]?CGS[id].props[0].e:"✨"}</span></span><span class="gname">${CGS[id].title}</span></button>`;
-  else html+=`<div class="gcell lock"><span class="gthumb glocked">🔒</span><span class="gname">未解锁</span></div>`;
- });
- html+=`</div><button class="primary" onclick="closePanel()">关闭</button>`;
- openPanel(html);
-}
-let cgViewList=[],cgViewIdx=0;
-function viewCG(id){
- cgViewList=cgList();cgViewIdx=Math.max(0,cgViewList.indexOf(id));
- $("panelBody").innerHTML=`<div class="ptitle">${CGS[id].title}</div><div class="cgview" id="cgview">${cgHTML(id)}</div><div class="grow"><button class="sbtn" onclick="cgNav(-1)">上一张</button><button class="sbtn" onclick="cgNav(1)">下一张</button><button class="sbtn" onclick="openGallery()">关闭</button></div>`;
-}
-function cgNav(d){if(!cgViewList.length)return;cgViewIdx=(cgViewIdx+d+cgViewList.length)%cgViewList.length;viewCG(cgViewList[cgViewIdx]);}
-/* ---- 回看 / 自动 / 快进 / 跳过（第 9/10 项） ---- */
-let autoMode=false,autoTimer=null;
-function toggleAuto(){if(!cur||cur.phase!=="dlg")return;autoMode=!autoMode;updAutoBtn();if(autoTimer)clearTimeout(autoTimer);if(autoMode&&!cur.typing)onLineDone();}
-function updAutoBtn(){const b=$("autoBtn");if(b)b.classList.toggle("on",autoMode);}
-function stopAuto(){if(autoMode){autoMode=false;updAutoBtn();}if(autoTimer)clearTimeout(autoTimer);}
-function ffLine(){if(cur&&cur.phase==="dlg"&&cur.typing)finishType();}
-function readMap(){try{const m=JSON.parse(localStorage.getItem("rsmn_read"));return(m&&typeof m==="object"&&!Array.isArray(m))?m:{};}catch(e){return{};}}
-function markRead(){try{const m=readMap();const k=S.li+"-"+cur.idx;if(!m[k]){m[k]=1;localStorage.setItem("rsmn_read",JSON.stringify(m));}}catch(e){}}
 function isRead(k){return !!readMap()[k];}
 function skipRead(){
  if(!cur||cur.phase!=="dlg")return;
@@ -1279,11 +1512,21 @@ function skipRead(){
 }
 function openLog(){
  if(!cur)return;
- const rows=(cur.log||[]).map(x=>`<div class="lrow"><b>${x.n}</b><p>${x.t}</p></div>`).join("");
+ const rows=chLog.map(x=>`<div class="lrow"><b>${x.n}</b><p>${x.t}</p></div>`).join("");
  openPanel(`<div class="ptitle">📜 对话记录（本关）</div><div class="lscroll">${rows||"<p style='color:#999;text-align:center;margin:8px 0'>还没有台词</p>"}</div><button class="primary" onclick="closePanel()">关闭</button>`);
  const sc=document.querySelector(".lscroll");if(sc)sc.scrollTop=sc.scrollHeight;
 }
 
+document.addEventListener("keydown",function(e){
+ if(e.repeat)return;
+ var k=e.key;
+ if(k==="Escape"){closePanel();return;}
+ var tag=(e.target&&e.target.tagName)||"";
+ if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return;
+ if(cur&&cur.phase==="dlg"&&(k===" "||k==="Enter")){e.preventDefault();tapScene();return;}
+ if(cur&&cur.phase==="cg"&&(k===" "||k==="Enter")){e.preventDefault();tapScene();return;}
+ if(cur&&cur.phase==="choice"&&(k==="1"||k==="2"||k==="3"||k==="4")){var i=+k-1;if(cur.opts&&cur.opts[i]){e.preventDefault();pick(i);}}
+});
 loadSettings();applyFont();
 initState();showStart();
 </script>
