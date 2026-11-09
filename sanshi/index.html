@@ -859,10 +859,10 @@ const HIDDEN=[
 /* ================= 8 条结局 ================= */
 const ENDINGS=[
  {id:"e1",em:"🌹",title:"传奇大女主线",type:"传奇掌门型人生",hidden:true,
-  cond:s=>s.hc>=3&&s.st.m>=19&&s.st.f>=18&&(s.fl.claim||s.fl.arch)&&(((s.rel||{}).lj||0)>=60||((s.rel||{}).lw||0)>=60),
+  cond:s=>s.hc>=3&&s.st.m>=19&&s.st.f>=18&&(s.fl.claim||s.fl.arch||s.fl.publish)&&(((s.rel||{}).lj||0)>=50||((s.rel||{}).lw||0)>=50),
   copy:"30 岁这年，你的名字同时出现在热搜、财报和母校的招生简章上。青禾回来了——以“林小满”的方式：工作室、品牌、基金会，一件不少。省赛角落里那台卡线的老缝纫机、晨会上被抢走的十二分钟、订婚宴上那句“你说了算”、发布会门口拍在台上的鉴定书——你把每一个“凭什么”，都活成了“我配”。命运发的暗牌你都摸到了，但你最清楚：真正的好牌，从来不是命运发的，是你自己。"},
  {id:"e2",em:"🖋️",title:"青禾传承线",type:"薪火传承型人生",hidden:true,
-  cond:s=>s.hc>=2&&(s.fl.publish||s.fl.brand==="qh"||s.fl.brand==="qx")&&((s.rel||{}).lw||0)>=50,
+  cond:s=>s.hc>=2&&(s.fl.publish||s.fl.brand==="qh"||s.fl.brand==="qx")&&(((s.rel||{}).lw||0)>=40||((s.rel||{}).lj||0)>=40),
   copy:"十二本手稿重新齐了那天，你在展柜前站了很久。直播间里八百万人看着笔迹比对——同一只手的字；三百米的队伍，排给迟到了二十年的青禾；老纪退休那天说了四个字：“青禾有后。”你摸着那枚顶针想：不。是青禾，有我。"},
  {id:"e3",em:"🏥",title:"拿命换钱线",type:"硬扛透支型人生",
   cond:s=>s.st.he<=5,
@@ -1163,14 +1163,30 @@ function relSumOf(r){let s=0;for(const k in (r||{}))s+=r[k];return s;}
 function calcEnd(){
  const ctx={st:S.st,fl:S.fl,hc:S.hidden.length,rel:S.rel||{},relSum:relSumOf(S.rel)};
  const byId=id=>ENDINGS.find(e=>e.id===id);
- for(const id of ["e9","e1","e2"]){const e=byId(id);if(e.cond(ctx))return e;}
+ // 代价线优先：关系崩了 / 身体透支
+ for(const id of ["e9","e3"]){const e=byId(id);if(e.cond(ctx))return e;}
+ // 隐藏高成就
+ for(const id of ["e1","e2"]){const e=byId(id);if(e.cond(ctx))return e;}
+ // 清醒独美
  {const e=byId("e4");if(e.cond(ctx))return e;}
+ // 数值主导 + 路径加权
  const scores=[];
- if(S.st.m>=23)scores.push({e:byId("e5"),w:(S.st.m-23)/7});
- if(S.st.f>=20)scores.push({e:byId("e6"),w:(S.st.f-20)/10});
- if(S.st.h>=22)scores.push({e:byId("e7"),w:(S.st.h-22)/8});
+ if(S.st.m>=23){
+  let w=(S.st.m-23)/7;
+  if(S.fl.path==="own"||S.fl.mn)w+=0.3;
+  scores.push({e:byId("e5"),w});
+ }
+ if(S.st.f>=20){
+  let w=(S.st.f-20)/10;
+  if(S.fl.path==="big"||((S.rel||{}).lj||0)>=40)w+=0.3;
+  scores.push({e:byId("e6"),w});
+ }
+ if(S.st.h>=22){
+  let w=(S.st.h-22)/8;
+  if(S.fl.solo||S.fl.tian)w+=0.2;
+  scores.push({e:byId("e7"),w});
+ }
  if(scores.length){scores.sort((a,b)=>b.w-a.w);return scores[0].e;}
- if(byId("e3").cond(ctx))return byId("e3");
  return byId("e8");
 }
 function showEnd(){
