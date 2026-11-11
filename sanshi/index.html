@@ -1202,6 +1202,13 @@ function showEnd(){
  const ctx={st:S.st,fl:S.fl,hc:S.hidden.length,rel:S.rel||{},relSum:relSumOf(S.rel)};
  const dual=(e.id==="e1"&&meetsE2(ctx));
  const dualTag=dual?`<div class="etype" style="margin-top:6px;opacity:.9">附加成就：🖋️ 青禾有后</div>`:"";
+ const moneyPose=(e.id==="e5")?(
+  S.fl.path==="own"?"小满工作室的招牌，是你自己挂上去的。":
+  S.fl.mn?"四成的合同推回去那天，价是你定的。":
+  S.fl.brand==="xm"?"招牌上只写林小满——名与账，都是自己的。":
+  ""
+ ):"";
+ const moneyTag=moneyPose?`<div class="etype" style="margin-top:6px;opacity:.9">搞钱姿态：${moneyPose}</div>`:"";
  setHero("🎬 全剧终","30 岁生日夜","🎊 她的三十而立","从 18 岁到 30 岁，12 年，31 关 · 93 个选择点，一个真相");setProg(1);renderBars();
  const n=S.hidden.length;
  const hlist=HIDDEN.map(h=>S.hidden.includes(h.id)?`${h.em} ${h.name} ✓`:"❓ ？？？").map(t=>`<div class="hi">${t}</div>`).join("");
@@ -1212,8 +1219,8 @@ function showEnd(){
  const far=relEnt.filter(kv=>kv[1]<0).sort((a,b)=>a[1]-b[1]).slice(0,3);
  const rels=(near.length||far.length)?`<div class="hpanel"><div class="ht">🤝 本局关系网</div><div class="hi"><div>💗 最亲近：${near.length?near.map(kv=>`${nm(kv[0])} +${kv[1]}`).join(" · "):"暂无"}</div><div>🥀 最疏远：${far.length?far.map(kv=>`${nm(kv[0])} ${kv[1]}`).join(" · "):"暂无"}</div></div></div>`:"";
  const moms=S.moms.slice(-6).reverse().map(m=>`<li>▸ ${m}</li>`).join("");
- const share=`【她的三十而立 · 人生模拟器】\n我打出了：${e.title}${dual?"（兼·青禾传承）":""}\n你的 30 岁是「${e.type}」\n💰钱包 ${S.st.m} · 😊快乐 ${S.st.h} · 💪健康 ${S.st.he} · 👥人脉 ${S.st.f}\n隐藏事件 ${n}/5${n<5?"（还有隐藏剧情没解锁，二刷试试）":"（全部解锁！欧皇实锤）"}\n——你也来试试你的人生剧本`;
- game.innerHTML=`<div class="poster"><div class="eemoji">${e.em}</div><div class="ek">${e.hidden?"✨ 隐藏结局 · 全剧终":"· 全剧终 ·"}</div><h2>${e.title}</h2><div class="etype">你的 30 岁是「${e.type}」</div>${dualTag}<div class="ecopy">${e.copy}</div><div class="estats"><div>💰 钱包<b>${S.st.m}</b></div><div>😊 快乐<b>${S.st.h}</b></div><div>💪 健康<b>${S.st.he}</b></div><div>👥 人脉<b>${S.st.f}</b></div></div>${rels?`${rels}`:""}<div class="hpanel"><div class="ht">✨ 本局隐藏事件 ${n}/5</div>${hlist}<div class="hi" style="margin-top:8px">${rem>0?`还有 <b>${rem}</b> 个隐藏事件没触发——换个活法二刷，解锁另外的剧情线和结局吧！`:"五段际遇集齐！你就是这局人生的隐藏主角 🏆"}</div></div>${S.moms.length?`<div class="moms"><div class="mt">🎞️ 本局名场面</div><ol>${moms}</ol></div>`:""}<button class="primary" onclick="copyShare()">📋 复制我的结局文案</button><button class="ghost" onclick="restart()">🔄 再玩一次</button><div style="font-size:11px;opacity:.75;margin-top:10px">共 ${ENDINGS.length} 条结局 · 你打出的是「${e.title}」· 还有 ${ENDINGS.length-1} 种 30 岁在等你</div></div>`;
+ const share=`【她的三十而立 · 人生模拟器】\n我打出了：${e.title}${dual?"（兼·青禾传承）":""}${moneyPose?(S.fl.path==="own"?"（姿态·单干）":S.fl.mn?"（姿态·拒价）":"（姿态·只做小满）"):""}\n你的 30 岁是「${e.type}」\n💰钱包 ${S.st.m} · 😊快乐 ${S.st.h} · 💪健康 ${S.st.he} · 👥人脉 ${S.st.f}\n隐藏事件 ${n}/5${n<5?"（还有隐藏剧情没解锁，二刷试试）":"（全部解锁！欧皇实锤）"}\n——你也来试试你的人生剧本`;
+ game.innerHTML=`<div class="poster"><div class="eemoji">${e.em}</div><div class="ek">${e.hidden?"✨ 隐藏结局 · 全剧终":"· 全剧终 ·"}</div><h2>${e.title}</h2><div class="etype">你的 30 岁是「${e.type}」</div>${dualTag}${moneyTag}<div class="ecopy">${e.copy}</div><div class="estats"><div>💰 钱包<b>${S.st.m}</b></div><div>😊 快乐<b>${S.st.h}</b></div><div>💪 健康<b>${S.st.he}</b></div><div>👥 人脉<b>${S.st.f}</b></div></div>${rels?`${rels}`:""}<div class="hpanel"><div class="ht">✨ 本局隐藏事件 ${n}/5</div>${hlist}<div class="hi" style="margin-top:8px">${rem>0?`还有 <b>${rem}</b> 个隐藏事件没触发——换个活法二刷，解锁另外的剧情线和结局吧！`:"五段际遇集齐！你就是这局人生的隐藏主角 🏆"}</div></div>${S.moms.length?`<div class="moms"><div class="mt">🎞️ 本局名场面</div><ol>${moms}</ol></div>`:""}<button class="primary" onclick="copyShare()">📋 复制我的结局文案</button><button class="ghost" onclick="restart()">🔄 再玩一次</button><div style="font-size:11px;opacity:.75;margin-top:10px">共 ${ENDINGS.length} 条结局 · 你打出的是「${e.title}」· 还有 ${ENDINGS.length-1} 种 30 岁在等你</div></div>`;
  window.shareText=share;
  window.scrollTo({top:0,behavior:"smooth"});
 }
