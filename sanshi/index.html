@@ -864,7 +864,7 @@ const ENDINGS=[
   cond:s=>s.hc>=3&&s.st.m>=19&&s.st.f>=18&&(s.fl.claim||s.fl.arch||s.fl.publish)&&(((s.rel||{}).lj||0)>=50||((s.rel||{}).lw||0)>=50),
   copy:"30 岁这年，你的名字同时出现在热搜、财报和母校的招生简章上。青禾回来了——以“林小满”的方式：工作室、品牌、基金会，一件不少。省赛角落里那台卡线的老缝纫机、晨会上被抢走的十二分钟、订婚宴上那句“你说了算”、发布会门口拍在台上的鉴定书——你把每一个“凭什么”，都活成了“我配”。命运发的暗牌你都摸到了，但你最清楚：真正的好牌，从来不是命运发的，是你自己。"},
  {id:"e2",em:"🖋️",title:"青禾传承线",type:"薪火传承型人生",hidden:true,
-  cond:s=>s.hc>=2&&(s.fl.publish||s.fl.brand==="qh"||s.fl.brand==="qx")&&(((s.rel||{}).lw||0)>=40||((s.rel||{}).lj||0)>=40),
+  cond:s=>s.hc>=3&&(s.fl.publish||s.fl.brand==="qh"||s.fl.brand==="qx")&&(((s.rel||{}).lw||0)>=45||((s.rel||{}).lj||0)>=45),
   copy:"十二本手稿重新齐了那天，你在展柜前站了很久。直播间里八百万人看着笔迹比对——同一只手的字；三百米的队伍，排给迟到了二十年的青禾；老纪退休那天说了四个字：“青禾有后。”你摸着那枚顶针想：不。是青禾，有我。招牌上那两个字，从今往后，既是来路，也是去处。"},
  {id:"e3",em:"🏥",title:"拿命换钱线",type:"硬扛透支型人生",
   cond:s=>s.st.he<=5,
@@ -1197,6 +1197,43 @@ function calcEnd(){
  if(scores.length){scores.sort((a,b)=>b.w-a.w);return scores[0].e;}
  return byId("e8");
 }
+function nearHints(ctx, e){
+ // 仅对普通数值/兜底结局提示；隐藏与代价线不提示
+ if(["e1","e2","e3","e9"].includes(e.id)) return [];
+ const hints=[];
+ const rel=ctx.rel||{};
+ const fl=ctx.fl||{};
+ const st=ctx.st||{};
+ const hc=ctx.hc||0;
+ // 接近 e1
+ if(e.id!=="e1"){
+  const gaps=[];
+  if(hc<3) gaps.push("更多隐藏际遇");
+  if(st.m<19) gaps.push("更厚的家底");
+  if(st.f<18) gaps.push("更广的人脉");
+  if(!(fl.claim||fl.arch||fl.publish)) gaps.push("公开身份或手稿");
+  if(((rel.lj||0)<50)&&((rel.lw||0)<50)) gaps.push("与老纪或梁薇的更深信赖");
+  if(gaps.length&&gaps.length<=3&&hc>=1&&(st.m>=15||st.f>=14))
+   hints.push("更接近「传奇大女主」：还差「"+gaps.slice(0,2).join("、")+"」");
+ }
+ // 接近 e2（用新门槛口径）
+ if(e.id!=="e2"){
+  const hasBrand=!!(fl.publish||fl.brand==="qh"||fl.brand==="qx");
+  const ment=((rel.lw||0)>=45)||((rel.lj||0)>=45);
+  if(hasBrand||ment||hc>=2){
+   const gaps=[];
+   if(hc<3) gaps.push("再多一段隐藏际遇");
+   if(!hasBrand) gaps.push("公开手稿或选择青禾相关品牌");
+   if(!ment) gaps.push("与梁薇或老纪的信赖再进一步");
+   if(gaps.length&&gaps.length<=3)
+    hints.push("更接近「青禾传承」：还差「"+gaps.slice(0,2).join("、")+"」");
+  }
+ }
+ // 接近 e4
+ if(e.id!=="e4"&&st.h>=17&&!fl.solo)
+  hints.push("更接近「清醒独美」：若在第19关先选择自己，会走向另一条路");
+ return hints.slice(0,2);
+}
 function showEnd(){
  const e=calcEnd();setTheme("thE");
  const ctx={st:S.st,fl:S.fl,hc:S.hidden.length,rel:S.rel||{},relSum:relSumOf(S.rel)};
@@ -1209,6 +1246,10 @@ function showEnd(){
   ""
  ):"";
  const moneyTag=moneyPose?`<div class="etype" style="margin-top:6px;opacity:.9">搞钱姿态：${moneyPose}</div>`:"";
+ const hints=nearHints(ctx,e);
+ const hintHtml=hints.length
+  ?`<div class="hpanel" style="margin-top:10px"><div class="ht">📌 再进一步</div>${hints.map(t=>`<div class="hi">${t}</div>`).join("")}</div>`
+  :"";
  setHero("🎬 全剧终","30 岁生日夜","🎊 她的三十而立","从 18 岁到 30 岁，12 年，31 关 · 93 个选择点，一个真相");setProg(1);renderBars();
  const n=S.hidden.length;
  const hlist=HIDDEN.map(h=>S.hidden.includes(h.id)?`${h.em} ${h.name} ✓`:"❓ ？？？").map(t=>`<div class="hi">${t}</div>`).join("");
@@ -1220,7 +1261,7 @@ function showEnd(){
  const rels=(near.length||far.length)?`<div class="hpanel"><div class="ht">🤝 本局关系网</div><div class="hi"><div>💗 最亲近：${near.length?near.map(kv=>`${nm(kv[0])} +${kv[1]}`).join(" · "):"暂无"}</div><div>🥀 最疏远：${far.length?far.map(kv=>`${nm(kv[0])} ${kv[1]}`).join(" · "):"暂无"}</div></div></div>`:"";
  const moms=S.moms.slice(-6).reverse().map(m=>`<li>▸ ${m}</li>`).join("");
  const share=`【她的三十而立 · 人生模拟器】\n我打出了：${e.title}${dual?"（兼·青禾传承）":""}${moneyPose?(S.fl.path==="own"?"（姿态·单干）":S.fl.mn?"（姿态·拒价）":"（姿态·只做小满）"):""}\n你的 30 岁是「${e.type}」\n💰钱包 ${S.st.m} · 😊快乐 ${S.st.h} · 💪健康 ${S.st.he} · 👥人脉 ${S.st.f}\n隐藏事件 ${n}/5${n<5?"（还有隐藏剧情没解锁，二刷试试）":"（全部解锁！欧皇实锤）"}\n——你也来试试你的人生剧本`;
- game.innerHTML=`<div class="poster"><div class="eemoji">${e.em}</div><div class="ek">${e.hidden?"✨ 隐藏结局 · 全剧终":"· 全剧终 ·"}</div><h2>${e.title}</h2><div class="etype">你的 30 岁是「${e.type}」</div>${dualTag}${moneyTag}<div class="ecopy">${e.copy}</div><div class="estats"><div>💰 钱包<b>${S.st.m}</b></div><div>😊 快乐<b>${S.st.h}</b></div><div>💪 健康<b>${S.st.he}</b></div><div>👥 人脉<b>${S.st.f}</b></div></div>${rels?`${rels}`:""}<div class="hpanel"><div class="ht">✨ 本局隐藏事件 ${n}/5</div>${hlist}<div class="hi" style="margin-top:8px">${rem>0?`还有 <b>${rem}</b> 个隐藏事件没触发——换个活法二刷，解锁另外的剧情线和结局吧！`:"五段际遇集齐！你就是这局人生的隐藏主角 🏆"}</div></div>${S.moms.length?`<div class="moms"><div class="mt">🎞️ 本局名场面</div><ol>${moms}</ol></div>`:""}<button class="primary" onclick="copyShare()">📋 复制我的结局文案</button><button class="ghost" onclick="restart()">🔄 再玩一次</button><div style="font-size:11px;opacity:.75;margin-top:10px">共 ${ENDINGS.length} 条结局 · 你打出的是「${e.title}」· 还有 ${ENDINGS.length-1} 种 30 岁在等你</div></div>`;
+ game.innerHTML=`<div class="poster"><div class="eemoji">${e.em}</div><div class="ek">${e.hidden?"✨ 隐藏结局 · 全剧终":"· 全剧终 ·"}</div><h2>${e.title}</h2><div class="etype">你的 30 岁是「${e.type}」</div>${dualTag}${moneyTag}<div class="ecopy">${e.copy}</div><div class="estats"><div>💰 钱包<b>${S.st.m}</b></div><div>😊 快乐<b>${S.st.h}</b></div><div>💪 健康<b>${S.st.he}</b></div><div>👥 人脉<b>${S.st.f}</b></div></div>${rels?`${rels}`:""}<div class="hpanel"><div class="ht">✨ 本局隐藏事件 ${n}/5</div>${hlist}<div class="hi" style="margin-top:8px">${rem>0?`还有 <b>${rem}</b> 个隐藏事件没触发——换个活法二刷，解锁另外的剧情线和结局吧！`:"五段际遇集齐！你就是这局人生的隐藏主角 🏆"}</div></div>${hintHtml}${S.moms.length?`<div class="moms"><div class="mt">🎞️ 本局名场面</div><ol>${moms}</ol></div>`:""}<button class="primary" onclick="copyShare()">📋 复制我的结局文案</button><button class="ghost" onclick="restart()">🔄 再玩一次</button><div style="font-size:11px;opacity:.75;margin-top:10px">共 ${ENDINGS.length} 条结局 · 你打出的是「${e.title}」· 还有 ${ENDINGS.length-1} 种 30 岁在等你</div></div>`;
  window.shareText=share;
  window.scrollTo({top:0,behavior:"smooth"});
 }
