@@ -689,7 +689,7 @@ const DATA=[
   {s:"n",t:"江屿的短信第九次弹出来。这一次，你终于按下了拉黑。"},
   {s:"n",t:"深夜天台，风很大，城市的灯火像一片倒过来的麦田。"},
   {s:"os",t:"25 岁了。所有人都在问我选谁。可我真正想问的是——我有没有资格，先选一次自己？那封“给小满”的信还在箱底。有些答案，25 岁还不到拆的时候。"}],
-  hk:"<b>下一章预告 ·《家族秘密》</b><br>你还没想好答案，舅舅的电话先来了，声音发抖：“小满……你外婆走了。老宅下月拆，你妈那些旧东西，你回来看一眼吧。”",
+  hk:"<b>下一章预告 ·《家族秘密》</b><br>你还没想好答案，舅舅的电话先来了，声音发抖：“小满……你外婆走了。老宅下月拆，你妈留下的那只樟木箱，你回来看一眼吧。”",
   o:[
   {t:"选程野：麦田和灯火，都要",e:{h:2,f:1,he:1,m:-1},set:{love:"cy"},rel:{cheng:20,tian:5},mom:"25 岁，我选了那个找青蛙的人",fb:["你给程野发语音：“柏林冷，带我的围巾。”那头沉默三秒，一声很轻的“好”。","甜甜第一个留言祝福——她现在管程野叫“哥”，叫得挺顺口。旧伤长成了新称呼。可你后来偶尔会想：如果当时再多撑三个月呢？"]},
   {t:"选陆之遥：迟到五年的那句话",e:{h:1,f:1,m:1,he:-1},set:{love:"zy"},rel:{lu:20},mom:"25 岁，我接过了迟到五年的那把伞",fb:["“那把伞，我还留着。”你发出这句话，他秒回：“我马上下楼。”研究院到你这里 23 公里，他骑了四十分钟。","迟到五年的人，往后每一步都在赶来的路上。只是有些路，一旦踏上，就再也回不到独自走的节奏了。"]},
@@ -1151,7 +1151,7 @@ function goNext(){
 /* ---- 开始/结局 ---- */
 function showStart(){
  viewTag="start";setTheme("th1");setHero("✦ 人生重开 · 橙光短剧版","18 → 30 岁","🎲 她的三十而立","一个贫困生女孩的 12 年，和一个迟到 20 年的秘密");setProg(0);renderBars();
- game.innerHTML=`<div class="start"><div class="tag2">· 橙光式剧情人生游戏 ·</div><h2>她的三十而立</h2>${castRow(["man","gu","lw","hls","cheng"])}<div class="feats"><span class="feat">5 章 31 关</span><span class="feat">93+ 选择</span><span class="feat">11 张关键 CG</span><span class="feat">9 条结局</span><span class="feat">5 个隐藏事件</span><span class="feat">好感系统</span></div><p>她是林小满，18 岁，普通家庭，全校都知道的"贫困生"。<br>奖学金有人抢、方案有人偷、男友有人雇、连妈妈的遗物都有人惦记。<br>而她妈妈留下的那些旧东西里，藏着一段没人提起的往事。<br><br>💰 钱包 · 😊 快乐 · 💪 健康 · 👥 人脉，四条数值 + 人物好感，决定你的结局；大多数选择都有代价，没有稳赢的路。</p><button class="primary" onclick="startGame()">▶ 开始我的人生</button><button class="ghost${hasAnySave()?"":" dis"}" ${hasAnySave()?"":"disabled"} onclick="continueGame()">📂 继续游戏</button><button class="ghost" onclick="openChapters()">📖 章节选择</button><button class="ghost" onclick="openGallery()">🖼️ CG 鉴赏</button><button class="ghost" onclick="openStats()">📊 数值面板</button><button class="ghost" onclick="openSettings()">⚙️ 设置</button></div>`;
+ game.innerHTML=`<div class="start"><div class="tag2">· 橙光式剧情人生游戏 ·</div><h2>她的三十而立</h2>${castRow(["man","gu","lw","hls","cheng"])}<div class="feats"><span class="feat">5 章 31 关</span><span class="feat">93+ 选择</span><span class="feat">11 张关键 CG</span><span class="feat">9 条结局</span><span class="feat">5 个隐藏事件</span><span class="feat">好感系统</span></div><p>她是林小满，18 岁，普通家庭，全校都知道的"贫困生"。<br>奖学金有人抢、方案有人偷、男友有人雇、连妈妈的遗物都有人惦记。<br>而她妈妈留下的那只樟木箱里，藏着一段没人提起的往事。<br><br>💰 钱包 · 😊 快乐 · 💪 健康 · 👥 人脉，四条数值 + 人物好感，决定你的结局；大多数选择都有代价，没有稳赢的路。</p><button class="primary" onclick="startGame()">▶ 开始我的人生</button><button class="ghost${hasAnySave()?"":" dis"}" ${hasAnySave()?"":"disabled"} onclick="continueGame()">📂 继续游戏</button><button class="ghost" onclick="openChapters()">📖 章节选择</button><button class="ghost" onclick="openGallery()">🖼️ CG 鉴赏</button><button class="ghost" onclick="openStats()">📊 数值面板</button><button class="ghost" onclick="openSettings()">⚙️ 设置</button></div>`;
 }
 function openStats(){
  var top=Object.entries(S.rel).sort(function(a,b){return Math.abs(b[1])-Math.abs(a[1]);}).slice(0,3);
